@@ -1,0 +1,83 @@
+{
+  "version": "2.0.0",
+  "tasks": [{
+    "label": "mix test",
+    "type": "shell",
+    "command": "mix",
+    "args": ["coveralls.html", "--color"],
+    "options": {
+      "cwd": "${workspaceRoot}",
+      "env": {
+        "MIX_ENV": "test"
+      },
+      "requireFiles": [
+        "test/**/test_helper.exs",
+        "test/**/*_test.exs"
+      ],
+    },
+    "problemMatcher": "$mixTestFailure",
+    "presentation": {
+      "clear": true
+    }
+  }, {
+    "label": "mix test on cursor",
+    "type": "shell",
+    "command": "mix",
+    "args": ["test", "${file}:${lineNumber}", "--color"],
+    "options": {
+      "cwd": "${workspaceRoot}",
+      "requireFiles": [
+        "test/**/test_helper.exs",
+        "test/**/*_test.exs"
+      ],
+    },
+    "problemMatcher": "$mixTestFailure",
+    "presentation": {
+      "clear": true
+    }
+  }, {
+    "label": "mix tests current file",
+    "type": "shell",
+    "command": "mix",
+    "args": ["test", "${file}", "--color"],
+    "options": {
+      "cwd": "${workspaceRoot}",
+      "requireFiles": [
+        "test/**/test_helper.exs",
+        "test/**/*_test.exs"
+      ],
+    },
+    "problemMatcher": "$mixTestFailure",
+    "presentation": {
+      "clear": true
+    }
+  }, {
+    "label": "mix tests failed from last run",
+    "type": "shell",
+    "command": "mix",
+    "args": ["test", "--color", "--failed"],
+    "options": {
+      "cwd": "${workspaceRoot}",
+      "requireFiles": [
+        "test/**/test_helper.exs",
+        "test/**/*_test.exs"
+      ],
+    },
+    "problemMatcher": "$mixTestFailure",
+    "presentation": {
+      "clear": true
+    }
+  }, {
+    "label": "mix format current file",
+    "type": "shell",
+    "command": "mix",
+    "args": ["format", "${file}"],
+    "options": {
+      "cwd": "${workspaceRoot}",
+    },
+    "problemMatcher": "$mixTestFailure",
+    "presentation": {
+      "clear": true
+    }
+  }]
+}

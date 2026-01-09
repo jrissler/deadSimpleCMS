@@ -1,0 +1,17 @@
+defmodule DeadSimpleCms.Repo.Migrations.CreateCmsPages do
+  use Ecto.Migration
+
+  def change do
+    create table(:cms_pages, primary_key: false) do
+      add :id, :binary_id, primary_key: true
+      add :slug, :string, null: false
+      add :title, :string, null: false
+      add :published, :boolean, default: false, null: false
+      add :published_at, :utc_datetime_usec
+
+      timestamps(type: :utc_datetime_usec)
+    end
+
+    create unique_index(:cms_pages, [:slug])
+  end
+end

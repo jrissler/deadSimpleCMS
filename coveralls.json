@@ -1,0 +1,26 @@
+{
+  "default_stop_words": [
+    "defmodule",
+    "defrecord",
+    "defimpl",
+    "defexception",
+    "defprotocol",
+    "defstruct",
+    "def.+(.+\\\\.+).+do",
+    "^\\s+use\\s+"
+  ],
+  "coverage_options": {
+    "treat_no_relevant_lines_as_covered": true,
+    "output_dir": "cover/"
+  },
+  "skip_files": [
+    "dead_simple_cms/repo.ex",
+    "dead_simple_cms.ex",
+    "dead_simple_cms/application.ex",
+    "dead_simple_cms_web/components/core_components.ex",
+    "dead_simple_cms_web/router.ex",
+    "dead_simple_cms_web/telemetry.ex",
+    "dead_simple_cms_web/components/layouts.ex",
+    "test/support/data_case.ex"
+  ]
+}
