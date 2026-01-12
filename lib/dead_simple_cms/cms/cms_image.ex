@@ -30,7 +30,6 @@ defmodule DeadSimpleCms.Cms.CmsImage do
     |> cast(attrs, [:filename, :url, :alt, :caption, :width, :height, :size, :content_type])
     |> validate_required([:filename, :url])
     |> validate_length(:filename, min: 1, max: 255)
-    |> validate_length(:url, min: 1, max: 255)
     |> validate_length(:alt, max: 255)
     |> validate_length(:caption, max: 255)
   end

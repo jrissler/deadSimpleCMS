@@ -5,7 +5,7 @@ defmodule DeadSimpleCms.Repo.Migrations.CreateCmsImages do
     create table(:cms_images, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :filename, :string, null: false
-      add :url, :string, null: false
+      add :url, :text, null: false
       add :alt, :string
       add :caption, :string
       add :width, :integer
