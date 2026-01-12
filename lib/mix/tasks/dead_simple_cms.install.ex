@@ -18,7 +18,8 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
 
   @impl Mix.Task
   def run(args) do
-    Mix.Task.run("app.start")
+    Mix.Task.run("app.config")
+    Mix.Task.run("compile")
 
     {opts, _rest, _invalid} = OptionParser.parse(args, strict: [no_components: :boolean, components_path: :string])
     no_components? = Keyword.get(opts, :no_components, false)
@@ -80,8 +81,8 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
 
     Mix.shell().info("")
     Mix.shell().info("✅ DeadSimpleCMS install complete. Next:")
-    Mix.shell().info("   mix ecto.migrate")
-    Mix.shell().info("   (then mount admin routes in your router)")
+    Mix.shell().info("[ ] mix ecto.migrate")
+    Mix.shell().info("[ ] Add DeadSimpleCmsWeb.Router.dead_simple_cms_admin_routes() to your router")
   end
 
   defp migration_basename(filename) do
@@ -106,6 +107,6 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
 
   defp default_components_path do
     app = Mix.Project.config()[:app] |> to_string()
-    Path.join(["lib", "#{app}_web", "cms_components.ex"])
+    Path.join(["lib", "#{app}_web", "components", "cms_components.ex"])
   end
 end

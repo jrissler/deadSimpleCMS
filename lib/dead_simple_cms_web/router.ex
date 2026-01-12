@@ -5,7 +5,8 @@ defmodule DeadSimpleCmsWeb.Router do
   Example in host router:
     scope "/admin", MyAppWeb do
       pipe_through [:browser, :require_admin]
-      DeadSimpleCMSWeb.Admin.Router.dead_simple_cms_admin_routes()
+
+      DeadSimpleCmsWeb.Router.dead_simple_cms_admin_routes()
     end
   """
 
@@ -31,10 +32,18 @@ defmodule DeadSimpleCmsWeb.Router do
   end
 
   defmacro dead_simple_cms_admin_routes do
-    quote do
-      live "/cms/pages", DeadSimpleCMSWeb.Admin.PagesLive.Index, :index
-      live "/cms/pages/:id", DeadSimpleCMSWeb.Admin.PagesLive.Show, :show
-      live "/cms/images", DeadSimpleCMSWeb.Admin.ImagesLive.Index, :index
+    pages_index = DeadSimpleCmsWeb.PagesLive.Index
+    pages_show = DeadSimpleCmsWeb.PagesLive.Show
+    images_index = DeadSimpleCmsWeb.ImagesLive.Index
+
+    quote bind_quoted: [
+            pages_index: pages_index,
+            pages_show: pages_show,
+            images_index: images_index
+          ] do
+      live "/pages", pages_index, :index
+      live "/pages/:id", pages_show, :show
+      live "/images", images_index, :index
     end
   end
 
