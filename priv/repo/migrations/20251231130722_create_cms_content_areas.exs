@@ -5,7 +5,7 @@ defmodule DeadSimpleCms.Repo.Migrations.CreateCmsContentAreas do
     create table(:cms_content_areas, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :position, :integer, null: false, default: 100
-      add :name, :string
+      add :name, :string, null: false
       add :visible, :boolean, default: false, null: false
       add :title, :string, null: false
       add :subtitle, :string

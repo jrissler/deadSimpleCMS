@@ -1,0 +1,15 @@
+defmodule <%= @app_web_module %>.CmsComponents do
+  use Phoenix.Component
+
+  attr :area, :map, required: true
+
+  def cms_text_block(assigns) do
+    ~H"""
+    <section>
+      <h2 :if={@area.title}><%= @area.title %></h2>
+      <p :if={@area.subtitle}><%= @area.subtitle %></p>
+      <div :if={@area.body_md}><%= @area.body_md %></div>
+    </section>
+    """
+  end
+end

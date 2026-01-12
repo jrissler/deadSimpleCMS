@@ -1,0 +1,18 @@
+defmodule <%= @app_module %>.Repo.Migrations.CreateCmsImages do
+  use Ecto.Migration
+
+  def change do
+    create table(:cms_images, primary_key: false) do
+      add :id, :binary_id, primary_key: true
+      add :filename, :string, null: false
+      add :content_type, :string
+      add :byte_size, :bigint
+      add :width, :integer
+      add :height, :integer
+
+      timestamps(type: :naive_datetime_usec)
+    end
+
+    create index(:cms_images, [:content_type])
+  end
+end

@@ -26,7 +26,7 @@ defmodule DeadSimpleCms.Cms.CmsContentArea do
   def changeset(area, attrs) do
     area
     |> cast(attrs, [:page_id, :position, :name, :visible, :title, :subtitle, :body_md, :image_id])
-    |> validate_required([:page_id, :position, :title])
+    |> validate_required([:page_id, :position, :title, :name])
     |> validate_number(:position, greater_than_or_equal_to: 0)
     |> validate_length(:name, max: 120)
     |> validate_length(:title, min: 1, max: 120)
