@@ -19,4 +19,12 @@ defmodule DeadSimpleCms do
   def s3_config do
     Application.get_env(:dead_simple_cms, :s3, [])
   end
+
+  def path(suffix) do
+    prefix = Application.get_env(:dead_simple_cms, :admin_path, "") |> normalize()
+    prefix <> suffix
+  end
+
+  defp normalize(""), do: ""
+  defp normalize(path), do: "/" <> String.trim(path, "/")
 end

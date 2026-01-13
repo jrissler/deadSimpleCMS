@@ -82,3 +82,6 @@ config :phoenix_live_view,
   debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+# ability to run the app stand-alone (ie: not as library)
+config :dead_simple_cms, start_app: true

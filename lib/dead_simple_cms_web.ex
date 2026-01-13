@@ -17,6 +17,9 @@ defmodule DeadSimpleCmsWeb do
   those modules here.
   """
 
+  @endpoint Application.compile_env(:dead_simple_cms, :endpoint, DeadSimpleCmsWeb.Endpoint)
+  @admin_layout Application.compile_env(:dead_simple_cms, :admin_layout, {DeadSimpleCmsWeb.Layouts, :app})
+
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
 
   def router do
@@ -48,7 +51,7 @@ defmodule DeadSimpleCmsWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView
+      use Phoenix.LiveView, layout: unquote(@admin_layout)
 
       unquote(html_helpers())
     end
@@ -94,7 +97,7 @@ defmodule DeadSimpleCmsWeb do
   def verified_routes do
     quote do
       use Phoenix.VerifiedRoutes,
-        endpoint: DeadSimpleCmsWeb.Endpoint,
+        endpoint: unquote(@endpoint),
         router: DeadSimpleCmsWeb.Router,
         statics: DeadSimpleCmsWeb.static_paths()
     end

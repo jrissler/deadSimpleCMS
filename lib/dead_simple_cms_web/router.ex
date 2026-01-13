@@ -29,21 +29,39 @@ defmodule DeadSimpleCmsWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/cms_pages", CmsPageLive.Index, :index
+    live "/cms_pages/new", CmsPageLive.Form, :new
+    live "/cms_pages/:id", CmsPageLive.Show, :show
+    live "/cms_pages/:id/edit", CmsPageLive.Form, :edit
+
+    live "/cms_images", CmsImageLive.Index, :index
+    live "/cms_images/new", CmsImageLive.Form, :new
+    live "/cms_images/:id", CmsImageLive.Show, :show
+    live "/cms_images/:id/edit", CmsImageLive.Form, :edit
+
+    live "/cms_content_areas", CmsContentAreaLive.Index, :index
+    live "/cms_content_areas/new", CmsContentAreaLive.Form, :new
+    live "/cms_content_areas/:id", CmsContentAreaLive.Show, :show
+    live "/cms_content_areas/:id/edit", CmsContentAreaLive.Form, :edit
   end
 
   defmacro dead_simple_cms_admin_routes do
-    pages_index = DeadSimpleCmsWeb.PagesLive.Index
-    pages_show = DeadSimpleCmsWeb.PagesLive.Show
-    images_index = DeadSimpleCmsWeb.ImagesLive.Index
+    quote do
+      live "/cms_pages", DeadSimpleCmsWeb.CmsPageLive.Index, :index
+      live "/cms_pages/new", DeadSimpleCmsWeb.CmsPageLive.Form, :new
+      live "/cms_pages/:id", DeadSimpleCmsWeb.CmsPageLive.Show, :show
+      live "/cms_pages/:id/edit", DeadSimpleCmsWeb.CmsPageLive.Form, :edit
 
-    quote bind_quoted: [
-            pages_index: pages_index,
-            pages_show: pages_show,
-            images_index: images_index
-          ] do
-      live "/pages", pages_index, :index
-      live "/pages/:id", pages_show, :show
-      live "/images", images_index, :index
+      live "/cms_images", DeadSimpleCmsWeb.CmsImageLive.Index, :index
+      live "/cms_images/new", DeadSimpleCmsWeb.CmsImageLive.Form, :new
+      live "/cms_images/:id", DeadSimpleCmsWeb.CmsImageLive.Show, :show
+      live "/cms_images/:id/edit", DeadSimpleCmsWeb.CmsImageLive.Form, :edit
+
+      live "/cms_content_areas", DeadSimpleCmsWeb.CmsContentAreaLive.Index, :index
+      live "/cms_content_areas/new", DeadSimpleCmsWeb.CmsContentAreaLive.Form, :new
+      live "/cms_content_areas/:id", DeadSimpleCmsWeb.CmsContentAreaLive.Show, :show
+      live "/cms_content_areas/:id/edit", DeadSimpleCmsWeb.CmsContentAreaLive.Form, :edit
     end
   end
 
