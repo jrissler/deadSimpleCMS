@@ -28,7 +28,7 @@ defmodule DeadSimpleCms.Cms.CmsImage do
   def changeset(image, attrs) do
     image
     |> cast(attrs, [:filename, :url, :alt, :caption, :width, :height, :size, :content_type])
-    |> validate_required([:filename, :url])
+    |> validate_required([:filename, :url, :content_type])
     |> validate_length(:filename, min: 1, max: 255)
     |> validate_length(:alt, max: 255)
     |> validate_length(:caption, max: 255)

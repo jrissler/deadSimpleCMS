@@ -28,11 +28,26 @@ defmodule DeadSimpleCmsWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import DeadSimpleCmsWeb.ConnCase
+      import DeadSimpleCms.Factory
     end
   end
 
   setup tags do
     DeadSimpleCms.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
+
+  @doc """
+  Setup helper that provides only base data.
+
+      setup :base_data
+
+  It stores an updated connection and a base_data in the
+  test context.
+  """
+  def base_data(%{conn: conn}) do
+    data = DeadSimpleCms.Factory.base_setup()
+
+    %{conn: conn, data: data}
   end
 end

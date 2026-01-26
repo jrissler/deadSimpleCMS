@@ -15,6 +15,8 @@ defmodule DeadSimpleCms.Cms.CmsPage do
     field :published, :boolean, default: false
     field :published_at, :utc_datetime_usec
 
+    has_many :cms_content_areas, DeadSimpleCms.Cms.CmsContentArea
+
     timestamps(type: :utc_datetime)
   end
 

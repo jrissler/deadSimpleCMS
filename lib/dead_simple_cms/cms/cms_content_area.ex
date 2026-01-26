@@ -17,23 +17,22 @@ defmodule DeadSimpleCms.Cms.CmsContentArea do
     field :subtitle, :string
     field :body_md, :string
 
-    belongs_to :page, DeadSimpleCms.Cms.CmsPage, type: :binary_id
-    belongs_to :image, DeadSimpleCms.Cms.CmsImage, type: :binary_id
+    belongs_to :cms_page, DeadSimpleCms.Cms.CmsPage
+    belongs_to :cms_image, DeadSimpleCms.Cms.CmsImage
 
     timestamps(type: :utc_datetime)
   end
 
   def changeset(area, attrs) do
     area
-    |> cast(attrs, [:page_id, :position, :name, :visible, :title, :subtitle, :body_md, :image_id])
-    |> validate_required([:page_id, :position, :title, :name])
+    |> cast(attrs, [:cms_page_id, :position, :name, :visible, :title, :subtitle, :body_md, :cms_image_id])
+    |> validate_required([:cms_page_id, :position, :name])
     |> validate_number(:position, greater_than_or_equal_to: 0)
     |> validate_length(:name, max: 120)
-    |> validate_length(:title, min: 1, max: 120)
     |> validate_length(:subtitle, max: 200)
     |> validate_length(:body_md, max: 20_000)
-    |> unique_constraint(:name, name: :cms_content_areas_page_id_name_index)
-    |> foreign_key_constraint(:page_id)
-    |> foreign_key_constraint(:image_id)
+    |> unique_constraint(:name, name: :cms_content_areas_cms_page_id_name_index)
+    |> foreign_key_constraint(:cms_page_id)
+    |> foreign_key_constraint(:cms_image_id)
   end
 end

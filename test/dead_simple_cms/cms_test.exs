@@ -16,7 +16,11 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_cms_page!/1 returns the cms_page with given id", %{data: data} do
-      assert Cms.get_cms_page!(data.cms_page.id) == data.cms_page
+      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, :cms_content_areas)
+    end
+
+    test "get_published_page_by_slug/1 returns the cms_page with given slug", %{data: data} do
+      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, :cms_content_areas)
     end
 
     test "create_cms_page/1 with valid data creates a cms_page" do
@@ -45,7 +49,7 @@ defmodule DeadSimpleCms.CmsTest do
     test "update_cms_page/2 with invalid data returns error changeset", %{data: data} do
       assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_page(data.cms_page, params_for(:cms_page, title: ""))
       assert errors == [{:title, {"can't be blank", [validation: :required]}}]
-      assert data.cms_page == Cms.get_cms_page!(data.cms_page.id)
+      assert Repo.preload(data.cms_page, :cms_content_areas) == Cms.get_cms_page!(data.cms_page.id)
     end
 
     test "delete_cms_page/1 deletes the cms_page", %{data: data} do
@@ -124,7 +128,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "create_cms_content_area/1 with valid data creates a cms_content_area", %{data: data} do
-      attrs = params_for(:cms_content_area, name: "some name", page_id: data.cms_page.id, image_id: data.cms_image.id)
+      attrs = params_for(:cms_content_area, name: "some name", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id)
 
       assert {:ok, %CmsContentArea{} = cms_content_area} = Cms.create_cms_content_area(attrs)
 
@@ -137,12 +141,12 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "create_cms_content_area/1 with invalid data returns error changeset", %{data: data} do
-      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_content_area(params_for(:cms_content_area, title: "", page_id: data.cms_page.id, image_id: data.cms_image.id))
-      assert errors == [{:title, {"can't be blank", [validation: :required]}}]
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_content_area(params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id))
+      assert errors == [{:name, {"can't be blank", [validation: :required]}}]
     end
 
     test "update_cms_content_area/2 with valid data updates the cms_content_area", %{data: data} do
-      attrs = params_for(:cms_content_area, name: "some updated name", page_id: data.cms_page.id, image_id: data.cms_image.id)
+      attrs = params_for(:cms_content_area, name: "some updated name", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id)
 
       assert {:ok, %CmsContentArea{} = cms_content_area} = Cms.update_cms_content_area(data.cms_content_area, attrs)
 
@@ -152,13 +156,13 @@ defmodule DeadSimpleCms.CmsTest do
       assert cms_content_area.title == attrs.title
       assert cms_content_area.subtitle == attrs.subtitle
       assert cms_content_area.body_md == attrs.body_md
-      assert cms_content_area.page_id == data.cms_page.id
-      assert cms_content_area.image_id == data.cms_image.id
+      assert cms_content_area.cms_page_id == data.cms_page.id
+      assert cms_content_area.cms_image_id == data.cms_image.id
     end
 
     test "update_cms_content_area/2 with invalid data returns error changeset", %{data: data} do
-      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_content_area(data.cms_content_area, %{title: ""})
-      assert errors == [{:title, {"can't be blank", [validation: :required]}}]
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_content_area(data.cms_content_area, %{name: ""})
+      assert errors == [{:name, {"can't be blank", [validation: :required]}}]
       assert data.cms_content_area == Cms.get_cms_content_area!(data.cms_content_area.id)
     end
 

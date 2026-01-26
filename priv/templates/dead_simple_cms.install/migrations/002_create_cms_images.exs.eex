@@ -9,6 +9,9 @@ defmodule <%= @app_module %>.Repo.Migrations.CreateCmsImages do
       add :byte_size, :bigint
       add :width, :integer
       add :height, :integer
+      add :size, :integer, null: false
+
+      add :cms_content_area_id, references(:cms_content_areas, type: :binary_id, on_delete: :delete_all), null: false
 
       timestamps(type: :naive_datetime_usec)
     end

@@ -12,12 +12,23 @@ defmodule DeadSimpleCms.Factory do
   def base_setup do
     cms_image = insert(:cms_image)
     cms_page = insert(:cms_page)
-    cms_content_area = insert(:cms_content_area, page_id: cms_page.id, image_id: cms_image.id)
+    cms_content_area = insert(:cms_content_area, cms_page_id: cms_page.id, cms_image_id: cms_image.id)
 
     %{
       cms_image: cms_image,
       cms_page: cms_page,
       cms_content_area: cms_content_area
+    }
+  end
+
+  def cms_page_factory do
+    base = sequence(:cms_page_title, &"Home Page #{&1}")
+
+    %DeadSimpleCms.Cms.CmsPage{
+      title: base,
+      slug: DeadSimpleCms.Slug.normalize(base),
+      published: true,
+      published_at: DateTime.utc_now()
     }
   end
 
@@ -31,17 +42,6 @@ defmodule DeadSimpleCms.Factory do
       height: 800,
       content_type: "image/jpeg",
       size: 1_229_955
-    }
-  end
-
-  def cms_page_factory do
-    base = sequence(:cms_page_title, &"Home Page #{&1}")
-
-    %DeadSimpleCms.Cms.CmsPage{
-      title: base,
-      slug: DeadSimpleCms.Slug.normalize(base),
-      published: true,
-      published_at: DateTime.utc_now()
     }
   end
 

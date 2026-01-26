@@ -38,24 +38,80 @@ defmodule DeadSimpleCms.Cms do
       ** (Ecto.NoResultsError)
 
   """
-  def get_cms_page!(id), do: repo().get!(CmsPage, id)
+  def get_cms_page!(id) do
+    repo().get!(CmsPage, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position]))
+  end
 
   @doc """
-  Creates a cms_page.
+  Returns a published CMS page by slug, preloading its visible content areas.
 
-  ## Examples
+  This function is intended for public page rendering. It enforces the
+  following guarantees:
 
-      iex> create_cms_page(%{field: value})
-      {:ok, %CmsPage{}}
+  - Only pages with `published == true` are returned
+  - Only content areas with `visible == true` are preloaded
+  - Content areas are ordered by `position` ascending
+  - Returns `nil` if no published page exists for the given slug
 
-      iex> create_cms_page(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  Layout, grouping, and presentation decisions remain the responsibility of the host application.
+  """
+  def get_published_page_by_slug(slug) do
+    visible_areas_query = from(a in CmsContentArea, where: a.visible == true, order_by: [asc: a.position])
 
+    from(p in CmsPage, where: p.slug == ^slug and p.published == true, preload: [cms_content_areas: ^visible_areas_query])
+    |> repo().one()
+  end
+
+  # @doc """
+  # Creates a cms_page.
+
+  # ## Examples
+
+  #     iex> create_cms_page(%{field: value})
+  #     {:ok, %CmsPage{}}
+
+  #     iex> create_cms_page(%{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
+
+  # """
+  # def create_cms_page(attrs) do
+  #   %CmsPage{}
+  #   |> CmsPage.changeset(attrs)
+  #   |> repo().insert()
+  # end
+
+  @doc """
+  Creates a cms_page and seeds default content areas.
+
+  This is intentionally simple and temporary. Once DB-backed templates
+  exist, this logic will be replaced.
   """
   def create_cms_page(attrs) do
-    %CmsPage{}
-    |> CmsPage.changeset(attrs)
-    |> repo().insert()
+    repo().transaction(fn ->
+      with {:ok, page} <-
+             %CmsPage{}
+             |> CmsPage.changeset(attrs)
+             |> repo().insert(),
+           :ok <- seed_page_content_areas(page) do
+        page
+      else
+        {:error, reason} ->
+          repo().rollback(reason)
+      end
+    end)
+  end
+
+  # TEMPORARY: code-defined page templates
+  defp seed_page_content_areas(%CmsPage{id: page_id}) do
+    DeadSimpleCmsWeb.Temp.PageTemplates.sales_page()
+    |> Enum.each(fn area_attrs ->
+      area_attrs
+      |> Map.put(:cms_page_id, page_id)
+      |> then(&CmsContentArea.changeset(%CmsContentArea{}, &1))
+      |> repo().insert!()
+    end)
+
+    :ok
   end
 
   @doc """
