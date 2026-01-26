@@ -42,6 +42,8 @@ defmodule DeadSimpleCmsWeb do
     quote do
       use Phoenix.Controller, formats: [:html, :json]
 
+      use Gettext, backend: DeadSimpleCmsWeb.Gettext
+
       import Plug.Conn
 
       unquote(verified_routes())
@@ -79,6 +81,8 @@ defmodule DeadSimpleCmsWeb do
 
   defp html_helpers do
     quote do
+      # Translation
+      use Gettext, backend: DeadSimpleCmsWeb.Gettext
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components

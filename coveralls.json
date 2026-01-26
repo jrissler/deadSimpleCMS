@@ -21,6 +21,7 @@
     "dead_simple_cms_web/router.ex",
     "dead_simple_cms_web/telemetry.ex",
     "dead_simple_cms_web/components/layouts.ex",
+    "mix/tasks/dead_simple_cms.install.ex",
     "test/support/data_case.ex"
   ]
 }

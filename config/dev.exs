@@ -24,7 +24,10 @@ config :dead_simple_cms, DeadSimpleCmsWeb.Endpoint,
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "fUF9bvtD4vRaCn2tKrBQojLrMPAkM0GRzp0Ve4UmgHYY0cC5WU4CNahKzyOu9I1K",
-  watchers: []
+  watchers: [
+    esbuild: {Esbuild, :install_and_run, [:installer, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:installer, ~w(--watch)]}
+  ]
 
 # ## SSL Support
 #
@@ -56,6 +59,8 @@ config :dead_simple_cms, DeadSimpleCmsWeb.Endpoint,
     patterns: [
       # Static assets, except user uploads
       ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"E,
+      # Gettext translations
+      ~r"priv/gettext/.*\.po$"E,
       # Router, Controllers, LiveViews and LiveComponents
       ~r"lib/dead_simple_cms_web/router\.ex$"E,
       ~r"lib/dead_simple_cms_web/(controllers|live|components)/.*\.(ex|heex)$"E

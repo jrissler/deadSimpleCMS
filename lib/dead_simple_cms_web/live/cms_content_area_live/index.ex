@@ -50,13 +50,17 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket |> assign(:page_title, "Listing Cms content areas") |> stream(:cms_content_areas, Cms.list_cms_content_areas())}
+    {:ok,
+     socket
+     |> assign(:page_title, "Listing Cms content areas")
+     |> stream(:cms_content_areas, Cms.list_cms_content_areas())}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     cms_content_area = Cms.get_cms_content_area!(id)
     {:ok, _} = Cms.delete_cms_content_area(cms_content_area)
+
     {:noreply, stream_delete(socket, :cms_content_areas, cms_content_area)}
   end
 end

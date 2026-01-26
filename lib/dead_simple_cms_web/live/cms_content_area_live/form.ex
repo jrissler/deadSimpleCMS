@@ -14,8 +14,14 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
       </.header>
 
       <.form for={@form} id="cms_content_area-form" phx-change="validate" phx-submit="save">
-        <.input field={@form[:cms_page_id]} type="hidden" />
-        <.input field={@form[:cms_image_id]} type="hidden" />
+        <.input
+          field={@form[:cms_page_id]}
+          type="select"
+          label="Page"
+          options={@pages}
+          prompt="Select a page"
+        />
+        <.input field={@form[:cms_image_id]} type="text" />
         <.input field={@form[:position]} type="number" label="Position" />
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:visible]} type="checkbox" label="Visible" />
@@ -33,7 +39,13 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    {:ok, socket |> assign(:return_to, return_to(params["return_to"])) |> apply_action(socket.assigns.live_action, params)}
+    pages = Cms.list_cms_pages() |> Enum.map(&{&1.title, &1.id})
+
+    {:ok,
+     socket
+     |> assign(:pages, pages)
+     |> assign(:return_to, return_to(params["return_to"]))
+     |> apply_action(socket.assigns.live_action, params)}
   end
 
   defp return_to("show"), do: "show"
@@ -41,12 +53,20 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     cms_content_area = Cms.get_cms_content_area!(id)
-    socket |> assign(:page_title, "Edit Cms content area") |> assign(:cms_content_area, cms_content_area) |> assign(:form, to_form(Cms.change_cms_content_area(cms_content_area)))
+
+    socket
+    |> assign(:page_title, "Edit Cms content area")
+    |> assign(:cms_content_area, cms_content_area)
+    |> assign(:form, to_form(Cms.change_cms_content_area(cms_content_area)))
   end
 
   defp apply_action(socket, :new, _params) do
     cms_content_area = %CmsContentArea{}
-    socket |> assign(:page_title, "New Cms content area") |> assign(:cms_content_area, cms_content_area) |> assign(:form, to_form(Cms.change_cms_content_area(cms_content_area)))
+
+    socket
+    |> assign(:page_title, "New Cms content area")
+    |> assign(:cms_content_area, cms_content_area)
+    |> assign(:form, to_form(Cms.change_cms_content_area(cms_content_area)))
   end
 
   @impl true
@@ -60,15 +80,28 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
 
   defp save_cms_content_area(socket, :edit, cms_content_area_params) do
     case Cms.update_cms_content_area(socket.assigns.cms_content_area, cms_content_area_params) do
-      {:ok, cms_content_area} -> {:noreply, socket |> put_flash(:info, "Cms content area updated successfully") |> push_navigate(to: return_path(socket.assigns.return_to, cms_content_area))}
-      {:error, %Ecto.Changeset{} = changeset} -> {:noreply, assign(socket, form: to_form(changeset))}
+      {:ok, cms_content_area} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Cms content area updated successfully")
+         |> push_navigate(to: return_path(socket.assigns.return_to, cms_content_area))}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
   defp save_cms_content_area(socket, :new, cms_content_area_params) do
     case Cms.create_cms_content_area(cms_content_area_params) do
-      {:ok, cms_content_area} -> {:noreply, socket |> put_flash(:info, "Cms content area created successfully") |> push_navigate(to: return_path(socket.assigns.return_to, cms_content_area))}
-      {:error, %Ecto.Changeset{} = changeset} -> {:noreply, assign(socket, form: to_form(changeset))}
+      {:ok, cms_content_area} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Cms content area created successfully")
+         |> push_navigate(to: return_path(socket.assigns.return_to, cms_content_area))}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        IO.inspect(changeset)
+        {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
