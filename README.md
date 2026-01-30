@@ -8,6 +8,8 @@ theming, caching, auth, or rendering
 
 Your application owns everything else.
 
+High probabable this is only useful for a few specific needs I have!
+
 ---
 
 ## Philosophy
@@ -32,7 +34,7 @@ extend without fighting hidden abstractions.
 - `cms_content_areas`
 - `cms_images`
 - Admin LiveView UI for managing content
-- A single baseline content shape (`:text_block`)
+- A simple baseline content shapes
 - Repo indirection so the host app controls persistence
 
 ---
@@ -41,10 +43,9 @@ extend without fighting hidden abstractions.
 
 - No automatic migrations
 - No database ownership
-- No frontend rendering
+- No frontend rendering (only simple tailwind admin UI that is optional)
 - No authentication or authorization
 - No caching or publishing workflows
-- No page builder or layout system
 
 ---
 
@@ -74,7 +75,11 @@ You must configure which Repo it should use:
 
 ```elixir
 # config/config.exs
-config :dead_simple_cms, repo: MyApp.Repo
+config :dead_simple_cms,
+  repo: YourApp.Repo,
+  endpoint: YourAppWeb.Endpoint,
+  admin_layout: {YourAppWeb.Layouts, :root},
+  admin_path: "/cms" # or "/"
 ```
 
 This is required.
@@ -82,8 +87,6 @@ This is required.
 ---
 
 ### 3. Install migrations (host-owned)
-
-DeadSimpleCms ships migration templates, not migrations.
 
 Run the install task to copy rendered migrations into your app:
 
@@ -102,9 +105,12 @@ mix ecto.migrate
 ### 4. Mount admin routes
 
 ```elixir
-scope "/admin", MyAppWeb do
+import DeadSimpleCmsWeb.Router, only: [dead_simple_cms_admin_routes: 0]
+
+scope "/admin", YourAppWeb do
   pipe_through [:browser, :require_admin]
-  DeadSimpleCmsWeb.Router.dead_simple_cms_admin_routes()
+
+  dead_simple_cms_admin_routes()
 end
 ```
 
