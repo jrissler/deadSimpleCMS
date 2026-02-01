@@ -7,13 +7,11 @@ defmodule <%= @app_module %>.Repo.Migrations.CreateCmsPages do
       add :slug, :string, null: false
       add :title, :string, null: false
       add :published, :boolean, null: false, default: false
-      add :published_at, :naive_datetime
+      add :published_at, :utc_datetime_usec
 
-      timestamps(type: :naive_datetime_usec)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create unique_index(:cms_pages, [:slug])
-    create index(:cms_pages, [:published])
-    create index(:cms_pages, [:published_at])
   end
 end

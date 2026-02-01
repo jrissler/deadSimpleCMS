@@ -6,43 +6,41 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        Listing Cms pages
-        <:actions>
-          <.button variant="primary" navigate={DeadSimpleCms.path("/cms_pages/new")}>
-            <.icon name="hero-plus" /> New Cms page
-          </.button>
-        </:actions>
-      </.header>
+    <.header>
+      Listing Cms pages
+      <:actions>
+        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_pages/new")}>
+          <.icon name="hero-plus" /> New Cms page
+        </.button>
+      </:actions>
+    </.header>
 
-      <.table
-        id="cms_pages"
-        rows={@streams.cms_pages}
-        row_click={fn {_id, cms_page} -> JS.navigate(DeadSimpleCms.path("/cms_pages/#{cms_page.id}")) end}
-      >
-        <:col :let={{_id, cms_page}} label="Slug">{cms_page.slug}</:col>
-        <:col :let={{_id, cms_page}} label="Title">{cms_page.title}</:col>
-        <:col :let={{_id, cms_page}} label="Published">{cms_page.published}</:col>
-        <:col :let={{_id, cms_page}} label="Published at">{cms_page.published_at}</:col>
+    <.table
+      id="cms_pages"
+      rows={@streams.cms_pages}
+      row_click={fn {_id, cms_page} -> JS.navigate(DeadSimpleCms.path("/cms_pages/#{cms_page.id}")) end}
+    >
+      <:col :let={{_id, cms_page}} label="Slug">{cms_page.slug}</:col>
+      <:col :let={{_id, cms_page}} label="Title">{cms_page.title}</:col>
+      <:col :let={{_id, cms_page}} label="Published">{cms_page.published}</:col>
+      <:col :let={{_id, cms_page}} label="Published at">{cms_page.published_at}</:col>
 
-        <:action :let={{_id, cms_page}}>
-          <div class="sr-only">
-            <.link navigate={DeadSimpleCms.path("/cms_pages/#{cms_page.id}")}>Show</.link>
-          </div>
-          <.link navigate={DeadSimpleCms.path("/cms_pages/#{cms_page.id}/edit")}>Edit</.link>
-        </:action>
+      <:action :let={{_id, cms_page}}>
+        <div class="sr-only">
+          <.link navigate={DeadSimpleCms.path("/cms_pages/#{cms_page.id}")}>Show</.link>
+        </div>
+        <.link navigate={DeadSimpleCms.path("/cms_pages/#{cms_page.id}/edit")}>Edit</.link>
+      </:action>
 
-        <:action :let={{id, cms_page}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: cms_page.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
-        </:action>
-      </.table>
-    </Layouts.app>
+      <:action :let={{id, cms_page}}>
+        <.link
+          phx-click={JS.push("delete", value: %{id: cms_page.id}) |> hide("##{id}")}
+          data-confirm="Are you sure?"
+        >
+          Delete
+        </.link>
+      </:action>
+    </.table>
     """
   end
 

@@ -18,7 +18,8 @@ config :dead_simple_cms,
     # optional CDN base; if nil, use https://<bucket>.s3.amazonaws.com/<key>
     public_base_url: System.get_env("DSCMS_S3_PUBLIC_BASE_URL"),
     prefix: "dead_simple_cms"
-  ]
+  ],
+  endpoint: DeadSimpleCmsWeb.Endpoint
 
 # Configure the endpoint
 config :dead_simple_cms, DeadSimpleCmsWeb.Endpoint,

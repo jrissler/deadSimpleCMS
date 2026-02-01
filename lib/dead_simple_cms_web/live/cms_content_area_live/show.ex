@@ -6,7 +6,6 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
       <.header>
         Cms content area {@cms_content_area.id}
         <:subtitle>This is a cms_content_area record from your database.</:subtitle>
@@ -28,7 +27,6 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Show do
         <:item title="Subtitle">{@cms_content_area.subtitle}</:item>
         <:item title="Body md">{@cms_content_area.body_md}</:item>
       </.list>
-    </Layouts.app>
     """
   end
 

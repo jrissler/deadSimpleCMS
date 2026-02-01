@@ -7,33 +7,31 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        {@page_title}
-        <:subtitle>Use this form to manage cms_content_area records in your database.</:subtitle>
-      </.header>
+    <.header>
+      {@page_title}
+      <:subtitle>Use this form to manage cms_content_area records in your database.</:subtitle>
+    </.header>
 
-      <.form for={@form} id="cms_content_area-form" phx-change="validate" phx-submit="save">
-        <.input
-          field={@form[:cms_page_id]}
-          type="select"
-          label="Page"
-          options={@pages}
-          prompt="Select a page"
-        />
-        <.input field={@form[:cms_image_id]} type="text" />
-        <.input field={@form[:position]} type="number" label="Position" />
-        <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:visible]} type="checkbox" label="Visible" />
-        <.input field={@form[:title]} type="text" label="Title" />
-        <.input field={@form[:subtitle]} type="text" label="Subtitle" />
-        <.input field={@form[:body_md]} type="textarea" label="Body md" />
-        <footer>
-          <.button phx-disable-with="Saving..." variant="primary">Save Cms content area</.button>
-          <.button navigate={return_path(@return_to, @cms_content_area)}>Cancel</.button>
-        </footer>
-      </.form>
-    </Layouts.app>
+    <.form for={@form} id="cms_content_area-form" phx-change="validate" phx-submit="save">
+      <.input
+        field={@form[:cms_page_id]}
+        type="select"
+        label="Page"
+        options={@pages}
+        prompt="Select a page"
+      />
+      <.input field={@form[:cms_image_id]} type="text" />
+      <.input field={@form[:position]} type="number" label="Position" />
+      <.input field={@form[:name]} type="text" label="Name" />
+      <.input field={@form[:visible]} type="checkbox" label="Visible" />
+      <.input field={@form[:title]} type="text" label="Title" />
+      <.input field={@form[:subtitle]} type="text" label="Subtitle" />
+      <.input field={@form[:body_md]} type="textarea" label="Body md" />
+      <footer>
+        <.button phx-disable-with="Saving..." variant="primary">Save Cms content area</.button>
+        <.button navigate={return_path(@return_to, @cms_content_area)}>Cancel</.button>
+      </footer>
+    </.form>
     """
   end
 

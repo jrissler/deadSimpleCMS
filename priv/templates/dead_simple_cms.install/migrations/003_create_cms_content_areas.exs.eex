@@ -4,23 +4,21 @@ defmodule <%= @app_module %>.Repo.Migrations.CreateCmsContentAreas do
   def change do
     create table(:cms_content_areas, primary_key: false) do
       add :id, :binary_id, primary_key: true
-      add :position, :integer, null: false, default: 0
+      add :position, :integer, null: false, default: 100
       add :name, :string, null: false
       add :visible, :boolean, null: false, default: false
       add :title, :string
       add :subtitle, :string
       add :body_md, :text
 
-      add :cms_page_id, references(:cms_pages, type: :binary_id, on_delete: :delete_all), null: false
-      add :cms_image_id, references(:cms_images, type: :binary_id, on_delete: :nilify_all)
+      add :cms_page_id, references(:cms_pages, on_delete: :delete_all, type: :binary_id), null: false
+      add :cms_image_id, references(:cms_images, on_delete: :nilify_all, type: :binary_id)
 
-      timestamps(type: :naive_datetime_usec)
+      timestamps(type: :utc_datetime_usec)
     end
 
-    create index(:cms_content_areas, [:cms_page_id])
-    create index(:cms_content_areas, [:cms_image_id])
-    create index(:cms_content_areas, [:visible])
     create index(:cms_content_areas, [:cms_page_id, :position])
+    create index(:cms_content_areas, [:cms_image_id])
     create unique_index(:cms_content_areas, [:cms_page_id, :name])
   end
 end

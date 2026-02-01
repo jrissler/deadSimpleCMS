@@ -6,25 +6,23 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        Cms image {@cms_image.id}
-        <:subtitle>This is a cms_image record from your database.</:subtitle>
-        <:actions>
-          <.button navigate={DeadSimpleCms.path("/cms_images")}>
-            <.icon name="hero-arrow-left" />
-          </.button>
-          <.button variant="primary" navigate={DeadSimpleCms.path("/cms_images/#{@cms_image.id}/edit?return_to=show")}>
-            <.icon name="hero-pencil-square" /> Edit cms_image
-          </.button>
-        </:actions>
-      </.header>
+    <.header>
+      Cms image {@cms_image.id}
+      <:subtitle>This is a cms_image record from your database.</:subtitle>
+      <:actions>
+        <.button navigate={DeadSimpleCms.path("/cms_images")}>
+          <.icon name="hero-arrow-left" />
+        </.button>
+        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_images/#{@cms_image.id}/edit?return_to=show")}>
+          <.icon name="hero-pencil-square" /> Edit cms_image
+        </.button>
+      </:actions>
+    </.header>
 
-      <.list>
-        <:item title="Alt">{@cms_image.alt}</:item>
-        <:item title="Url">{@cms_image.url}</:item>
-      </.list>
-    </Layouts.app>
+    <.list>
+      <:item title="Alt">{@cms_image.alt}</:item>
+      <:item title="Url">{@cms_image.url}</:item>
+    </.list>
     """
   end
 

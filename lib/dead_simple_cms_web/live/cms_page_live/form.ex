@@ -7,71 +7,69 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        {@page_title}
-        <:subtitle>Use this form to manage CMS Pages.</:subtitle>
-      </.header>
+    <.header>
+      {@page_title}
+      <:subtitle>Use this form to manage CMS Pages.</:subtitle>
+    </.header>
 
-      <.form for={@form} id="cms_page-form" phx-change="validate" phx-submit="save">
-        <.input field={@form[:slug]} type="text" label="Slug" />
-        <.input field={@form[:title]} type="text" label="Title" />
-        <.input field={@form[:published]} type="checkbox" label="Published" />
-        <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
-        <footer>
-          <.button phx-disable-with="Saving..." variant="primary">Save Cms page</.button>
-          <.button navigate={return_path(@return_to, @cms_page)}>Cancel</.button>
-        </footer>
-      </.form>
+    <.form for={@form} id="cms_page-form" phx-change="validate" phx-submit="save">
+      <.input field={@form[:slug]} type="text" label="Slug" />
+      <.input field={@form[:title]} type="text" label="Title" />
+      <.input field={@form[:published]} type="checkbox" label="Published" />
+      <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
+      <footer>
+        <.button phx-disable-with="Saving..." variant="primary">Save Cms page</.button>
+        <.button navigate={return_path(@return_to, @cms_page)}>Cancel</.button>
+      </footer>
+    </.form>
 
-      <%= if @live_action == :edit do %>
-        <div class="mt-10">
-          <.header>
-            Content Areas
-            <:subtitle>Edit slot content here. Layout and rendering are controlled by the host app.</:subtitle>
-          </.header>
+    <%= if @live_action == :edit do %>
+      <div class="mt-10">
+        <.header>
+          Content Areas
+          <:subtitle>Edit slot content here. Layout and rendering are controlled by the host app.</:subtitle>
+        </.header>
 
-          <div class="space-y-6">
-            <%= for area <- @areas do %>
-              <div class="rounded-lg border p-4">
-                <div class="mb-3 flex items-center justify-between">
-                  <div class="min-w-0">
-                    <div class="font-semibold truncate">
-                      {area.name || "(unnamed)"}
-                    </div>
-                    <div class="text-sm text-zinc-600">
-                      position: {area.position} • visible: {area.visible}
-                      {if area.cms_image_id, do: " • image", else: ""}
-                    </div>
+        <div class="space-y-6">
+          <%= for area <- @areas do %>
+            <div class="rounded-lg border p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <div class="min-w-0">
+                  <div class="font-semibold truncate">
+                    {area.name || "(unnamed)"}
+                  </div>
+                  <div class="text-sm text-zinc-600">
+                    position: {area.position} • visible: {area.visible}
+                    {if area.cms_image_id, do: " • image", else: ""}
                   </div>
                 </div>
-
-                <.form for={@area_forms[area.id]} id={"cms_content_area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area">
-                  <input type="hidden" name="_id" value={area.id} />
-
-                  <div class="grid grid-cols-1 gap-4">
-                    <.input field={@area_forms[area.id][:visible]} type="checkbox" label="Visible" />
-                    <.input field={@area_forms[area.id][:title]} type="text" label="Title" />
-                    <.input field={@area_forms[area.id][:subtitle]} type="text" label="Subtitle" />
-                    <.input field={@area_forms[area.id][:body_md]} type="textarea" label="Body (Markdown)" />
-                  </div>
-
-                  <div class="mt-4 flex gap-2">
-                    <.button phx-disable-with="Saving..." variant="primary">Save Area</.button>
-                  </div>
-                </.form>
               </div>
-            <% end %>
 
-            <%= if Enum.empty?(@areas) do %>
-              <div class="rounded-lg border border-dashed p-6 text-sm text-zinc-600">
-                No content areas exist for this page yet.
-              </div>
-            <% end %>
-          </div>
+              <.form for={@area_forms[area.id]} id={"cms_content_area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area">
+                <input type="hidden" name="_id" value={area.id} />
+
+                <div class="grid grid-cols-1 gap-4">
+                  <.input field={@area_forms[area.id][:visible]} type="checkbox" label="Visible" />
+                  <.input field={@area_forms[area.id][:title]} type="text" label="Title" />
+                  <.input field={@area_forms[area.id][:subtitle]} type="text" label="Subtitle" />
+                  <.input field={@area_forms[area.id][:body_md]} type="textarea" label="Body (Markdown)" />
+                </div>
+
+                <div class="mt-4 flex gap-2">
+                  <.button phx-disable-with="Saving..." variant="primary">Save Area</.button>
+                </div>
+              </.form>
+            </div>
+          <% end %>
+
+          <%= if Enum.empty?(@areas) do %>
+            <div class="rounded-lg border border-dashed p-6 text-sm text-zinc-600">
+              No content areas exist for this page yet.
+            </div>
+          <% end %>
         </div>
-      <% end %>
-    </Layouts.app>
+      </div>
+    <% end %>
     """
   end
 

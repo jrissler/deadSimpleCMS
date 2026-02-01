@@ -10,6 +10,7 @@ defmodule DeadSimpleCms.Repo.Migrations.CreateCmsContentAreas do
       add :title, :string
       add :subtitle, :string
       add :body_md, :text
+
       add :cms_page_id, references(:cms_pages, on_delete: :delete_all, type: :binary_id), null: false
       add :cms_image_id, references(:cms_images, on_delete: :nilify_all, type: :binary_id)
 

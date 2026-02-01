@@ -6,41 +6,39 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        Listing Cms images
-        <:actions>
-          <.button variant="primary" navigate={DeadSimpleCms.path("/cms_images/new")}>
-            <.icon name="hero-plus" /> New Cms image
-          </.button>
-        </:actions>
-      </.header>
+    <.header>
+      Listing Cms images
+      <:actions>
+        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_images/new")}>
+          <.icon name="hero-plus" /> New Cms image
+        </.button>
+      </:actions>
+    </.header>
 
-      <.table
-        id="cms_images"
-        rows={@streams.cms_images}
-        row_click={fn {_id, cms_image} -> JS.navigate(DeadSimpleCms.path("/cms_images/#{cms_image.id}")) end}
-      >
-        <:col :let={{_id, cms_image}} label="Alt">{cms_image.alt}</:col>
-        <:col :let={{_id, cms_image}} label="Url">{cms_image.url}</:col>
+    <.table
+      id="cms_images"
+      rows={@streams.cms_images}
+      row_click={fn {_id, cms_image} -> JS.navigate(DeadSimpleCms.path("/cms_images/#{cms_image.id}")) end}
+    >
+      <:col :let={{_id, cms_image}} label="Alt">{cms_image.alt}</:col>
+      <:col :let={{_id, cms_image}} label="Url">{cms_image.url}</:col>
 
-        <:action :let={{_id, cms_image}}>
-          <div class="sr-only">
-            <.link navigate={DeadSimpleCms.path("/cms_images/#{cms_image.id}")}>Show</.link>
-          </div>
-          <.link navigate={DeadSimpleCms.path("/cms_images/#{cms_image.id}/edit")}>Edit</.link>
-        </:action>
+      <:action :let={{_id, cms_image}}>
+        <div class="sr-only">
+          <.link navigate={DeadSimpleCms.path("/cms_images/#{cms_image.id}")}>Show</.link>
+        </div>
+        <.link navigate={DeadSimpleCms.path("/cms_images/#{cms_image.id}/edit")}>Edit</.link>
+      </:action>
 
-        <:action :let={{id, cms_image}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: cms_image.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
-        </:action>
-      </.table>
-    </Layouts.app>
+      <:action :let={{id, cms_image}}>
+        <.link
+          phx-click={JS.push("delete", value: %{id: cms_image.id}) |> hide("##{id}")}
+          data-confirm="Are you sure?"
+        >
+          Delete
+        </.link>
+      </:action>
+    </.table>
     """
   end
 

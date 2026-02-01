@@ -31,7 +31,7 @@ defmodule DeadSimpleCmsWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
-  slot :inner_block, required: true
+  # slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
@@ -56,7 +56,7 @@ defmodule DeadSimpleCmsWeb.Layouts do
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
-        {render_slot(@inner_block)}
+        {@inner_content}
       </div>
     </main>
 

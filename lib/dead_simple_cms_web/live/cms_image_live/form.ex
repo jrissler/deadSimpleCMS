@@ -7,24 +7,22 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        {@page_title}
-        <:subtitle>Use this form to manage cms_image records in your database.</:subtitle>
-      </.header>
+    <.header>
+      {@page_title}
+      <:subtitle>Use this form to manage cms_image records in your database.</:subtitle>
+    </.header>
 
-      <.form for={@form} id="cms_image-form" phx-change="validate" phx-submit="save">
-        <.input field={@form[:alt]} type="text" label="Alt" />
-        <.input field={@form[:url]} type="text" label="Url" />
-        <.input field={@form[:filename]} type="text" label="Filename" />
-        <.input field={@form[:content_type]} type="text" label="Filename" />
-        <.input field={@form[:size]} type="text" label="Size" />
-        <footer>
-          <.button phx-disable-with="Saving..." variant="primary">Save Cms image</.button>
-          <.button navigate={return_path(@return_to, @cms_image)}>Cancel</.button>
-        </footer>
-      </.form>
-    </Layouts.app>
+    <.form for={@form} id="cms_image-form" phx-change="validate" phx-submit="save">
+      <.input field={@form[:alt]} type="text" label="Alt" />
+      <.input field={@form[:url]} type="text" label="Url" />
+      <.input field={@form[:filename]} type="text" label="Filename" />
+      <.input field={@form[:content_type]} type="text" label="Filename" />
+      <.input field={@form[:size]} type="text" label="Size" />
+      <footer>
+        <.button phx-disable-with="Saving..." variant="primary">Save Cms image</.button>
+        <.button navigate={return_path(@return_to, @cms_image)}>Cancel</.button>
+      </footer>
+    </.form>
     """
   end
 

@@ -5,17 +5,17 @@ defmodule <%= @app_module %>.Repo.Migrations.CreateCmsImages do
     create table(:cms_images, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :filename, :string, null: false
-      add :content_type, :string
-      add :byte_size, :bigint
+      add :url, :text, null: false
+      add :size, :integer, null: false
+      add :alt, :string
+      add :caption, :string
       add :width, :integer
       add :height, :integer
-      add :size, :integer, null: false
+      add :content_type, :string, null: false
 
-      add :cms_content_area_id, references(:cms_content_areas, type: :binary_id, on_delete: :delete_all), null: false
-
-      timestamps(type: :naive_datetime_usec)
+      timestamps(type: :utc_datetime_usec)
     end
 
-    create index(:cms_images, [:content_type])
+    create unique_index(:cms_images, [:url])
   end
 end
