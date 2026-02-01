@@ -6,41 +6,34 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Listing Cms pages
-      <:actions>
-        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_pages/new")}>
-          <.icon name="hero-plus" /> New Cms page
-        </.button>
-      </:actions>
-    </.header>
+    <.content_header main_title="Listing CMS Pages" sub_title="Admin" description="Pages represent top-level routes and own ordered content areas.">
+      <:action>
+        <.link navigate={DeadSimpleCms.path("/cms_pages/new")} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" /> Add CMS Page
+        </.link>
+      </:action>
+    </.content_header>
 
-    <.table
-      id="cms_pages"
-      rows={@streams.cms_pages}
-      row_click={fn {_id, cms_page} -> JS.navigate(DeadSimpleCms.path("/cms_pages/#{cms_page.id}")) end}
-    >
-      <:col :let={{_id, cms_page}} label="Slug">{cms_page.slug}</:col>
-      <:col :let={{_id, cms_page}} label="Title">{cms_page.title}</:col>
-      <:col :let={{_id, cms_page}} label="Published">{cms_page.published}</:col>
-      <:col :let={{_id, cms_page}} label="Published at">{cms_page.published_at}</:col>
+    <.admin_table id="cms_pages" rows={@streams.cms_pages} row_click={fn {_id, page} -> JS.navigate(DeadSimpleCms.path("/cms_pages/#{page.id}")) end}>
+      <:col :let={{_id, page}} label="Slug">{page.slug}</:col>
+      <:col :let={{_id, page}} label="Title">{page.title}</:col>
+      <:col :let={{_id, page}} label="Published">{page.published}</:col>
+      <:col :let={{_id, page}} label="Published At">
+        {page.published_at && Calendar.strftime(page.published_at, "%Y-%m-%d")}
+      </:col>
 
-      <:action :let={{_id, cms_page}}>
-        <div class="sr-only">
-          <.link navigate={DeadSimpleCms.path("/cms_pages/#{cms_page.id}")}>Show</.link>
-        </div>
-        <.link navigate={DeadSimpleCms.path("/cms_pages/#{cms_page.id}/edit")}>Edit</.link>
+      <:action :let={{_id, page}}>
+        <.link navigate={DeadSimpleCms.path("/cms_pages/#{page.id}/edit")}>
+          Edit
+        </.link>
       </:action>
 
-      <:action :let={{id, cms_page}}>
-        <.link
-          phx-click={JS.push("delete", value: %{id: cms_page.id}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
-        >
+      <:action :let={{_id, page}}>
+        <.link phx-click={JS.push("delete", value: %{id: page.id})} data-confirm="Are you sure?">
           Delete
         </.link>
       </:action>
-    </.table>
+    </.admin_table>
     """
   end
 
@@ -48,14 +41,14 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Listing Cms pages")
+     |> assign(:page_title, "Listing CMS pages")
      |> stream(:cms_pages, Cms.list_cms_pages())}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    cms_page = Cms.get_cms_page!(id)
-    {:ok, _} = Cms.delete_cms_page(cms_page)
-    {:noreply, stream_delete(socket, :cms_pages, cms_page)}
+    page = Cms.get_cms_page!(id)
+    {:ok, _} = Cms.delete_cms_page(page)
+    {:noreply, stream_delete(socket, :cms_pages, page)}
   end
 end

@@ -11,7 +11,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
     test "lists all cms_pages", %{conn: conn, data: data} do
       {:ok, _index_live, html} = live(conn, ~p"/cms_pages")
 
-      assert html =~ "Listing Cms pages"
+      assert html =~ "Listing CMS Pages"
       assert html =~ data.cms_page.title
     end
 
@@ -20,7 +20,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
 
       assert {:ok, form_live, _} =
                index_live
-               |> element("a", "New Cms page")
+               |> element("a", "Add CMS Page")
                |> render_click()
                |> follow_redirect(conn, ~p"/cms_pages/new")
 
@@ -79,7 +79,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
     test "displays cms_page", %{conn: conn, data: data} do
       {:ok, _show_live, html} = live(conn, ~p"/cms_pages/#{data.cms_page}")
 
-      assert html =~ "Show Cms page"
+      assert html =~ "Viewing CMS Page"
       assert html =~ data.cms_page.title
     end
 

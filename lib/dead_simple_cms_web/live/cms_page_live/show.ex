@@ -6,25 +6,48 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Cms page {@cms_page.id}
-      <:subtitle>This is a cms_page record from your database.</:subtitle>
-      <:actions>
-        <.button navigate={DeadSimpleCms.path("/cms_pages")}>
-          <.icon name="hero-arrow-left" />
-        </.button>
-        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_pages/#{@cms_page.id}/edit?return_to=show")}>
-          <.icon name="hero-pencil-square" /> Edit cms_page
-        </.button>
-      </:actions>
-    </.header>
+    <.content_header main_title="Viewing CMS Page" sub_title={@cms_page.title} description="This page represents a top-level route and owns ordered content areas.">
+      <:action>
+        <.link navigate={DeadSimpleCms.path("/cms_pages")} class="inline-flex mr-1 items-center justify-center rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500">
+          <.icon name="hero-list-bullet" class="-ml-0.5 mr-1 h-5 w-5" /> View All
+        </.link>
 
-    <.list>
-      <:item title="Slug">{@cms_page.slug}</:item>
-      <:item title="Title">{@cms_page.title}</:item>
-      <:item title="Published">{@cms_page.published}</:item>
-      <:item title="Published at">{@cms_page.published_at}</:item>
-    </.list>
+        <.link navigate={DeadSimpleCms.path("/cms_pages/#{@cms_page.id}/edit?return_to=show")} class="inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-pencil" class="-ml-0.5 mr-1 h-5 w-5" /> Edit Page
+        </.link>
+      </:action>
+    </.content_header>
+
+    <main class="pt-2 pb-16 mt-0 bg-white">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-0">
+          <section aria-labelledby="cms-page-details-heading">
+            <.non_list_table object_name="cms_page" headers={["Field", "Value"]}>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Title</td>
+                <td class="data-table-td text-sm text-gray-500">{@cms_page.title}</td>
+              </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Slug</td>
+                <td class="data-table-td text-sm text-gray-500">{@cms_page.slug}</td>
+              </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Published</td>
+                <td class="data-table-td text-sm text-gray-500">
+                  {(@cms_page.published && "Yes") || "No"}
+                </td>
+              </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Published At</td>
+                <td class="data-table-td text-sm text-gray-500">
+                  {@cms_page.published_at && Calendar.strftime(@cms_page.published_at, "%Y-%m-%d")}
+                </td>
+              </:row>
+            </.non_list_table>
+          </section>
+        </div>
+      </div>
+    </main>
     """
   end
 
@@ -32,7 +55,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
   def mount(%{"id" => id}, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Show Cms page")
+     |> assign(:page_title, "CMS Page Details")
      |> assign(:cms_page, Cms.get_cms_page!(id))}
   end
 end

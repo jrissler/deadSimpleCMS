@@ -6,39 +6,32 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Listing Cms images
-      <:actions>
-        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_images/new")}>
-          <.icon name="hero-plus" /> New Cms image
-        </.button>
-      </:actions>
-    </.header>
+    <.content_header main_title="Listing CMS Images" sub_title="Admin" description="Images are reusable media assets that can be attached to content areas.">
+      <:action>
+        <.link navigate={DeadSimpleCms.path("/cms_images/new")} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" /> Add CMS Image
+        </.link>
+      </:action>
+    </.content_header>
 
-    <.table
-      id="cms_images"
-      rows={@streams.cms_images}
-      row_click={fn {_id, cms_image} -> JS.navigate(DeadSimpleCms.path("/cms_images/#{cms_image.id}")) end}
-    >
-      <:col :let={{_id, cms_image}} label="Alt">{cms_image.alt}</:col>
-      <:col :let={{_id, cms_image}} label="Url">{cms_image.url}</:col>
+    <.admin_table id="cms_images" rows={@streams.cms_images} row_click={fn {_id, image} -> JS.navigate(DeadSimpleCms.path("/cms_images/#{image.id}")) end}>
+      <:col :let={{_id, image}} label="Filename">{image.filename}</:col>
+      <:col :let={{_id, image}} label="Caption">
+        <span class="truncate max-w-xs block">{image.caption}</span>
+      </:col>
 
-      <:action :let={{_id, cms_image}}>
-        <div class="sr-only">
-          <.link navigate={DeadSimpleCms.path("/cms_images/#{cms_image.id}")}>Show</.link>
-        </div>
-        <.link navigate={DeadSimpleCms.path("/cms_images/#{cms_image.id}/edit")}>Edit</.link>
+      <:action :let={{_id, image}}>
+        <.link navigate={DeadSimpleCms.path("/cms_images/#{image.id}/edit")}>
+          Edit
+        </.link>
       </:action>
 
-      <:action :let={{id, cms_image}}>
-        <.link
-          phx-click={JS.push("delete", value: %{id: cms_image.id}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
-        >
+      <:action :let={{_id, image}}>
+        <.link phx-click={JS.push("delete", value: %{id: image.id})} data-confirm="Are you sure?">
           Delete
         </.link>
       </:action>
-    </.table>
+    </.admin_table>
     """
   end
 
@@ -46,14 +39,14 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Listing Cms images")
+     |> assign(:page_title, "Listing CMS images")
      |> stream(:cms_images, Cms.list_cms_images())}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    cms_image = Cms.get_cms_image!(id)
-    {:ok, _} = Cms.delete_cms_image(cms_image)
-    {:noreply, stream_delete(socket, :cms_images, cms_image)}
+    image = Cms.get_cms_image!(id)
+    {:ok, _} = Cms.delete_cms_image(image)
+    {:noreply, stream_delete(socket, :cms_images, image)}
   end
 end

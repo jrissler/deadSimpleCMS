@@ -6,43 +6,31 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      Listing Cms content areas
-      <:actions>
-        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_content_areas/new")}>
-          <.icon name="hero-plus" /> New Cms content area
-        </.button>
-      </:actions>
-    </.header>
+    <.content_header main_title="Listing CMS Content Areas" sub_title="Admin" description="CMS Content Areas belong to a page, and house a specific piece of content.">
+      <:action>
+        <.link navigate={DeadSimpleCms.path("/cms_content_areas/new")} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" /> Add CMS Content Area
+        </.link>
+      </:action>
+    </.content_header>
 
-    <.table
-      id="cms_content_areas"
-      rows={@streams.cms_content_areas}
-      row_click={fn {_id, cms_content_area} -> JS.navigate(DeadSimpleCms.path("/cms_content_areas/#{cms_content_area.id}")) end}
-    >
-      <:col :let={{_id, cms_content_area}} label="Position">{cms_content_area.position}</:col>
-      <:col :let={{_id, cms_content_area}} label="Name">{cms_content_area.name}</:col>
-      <:col :let={{_id, cms_content_area}} label="Visible">{cms_content_area.visible}</:col>
-      <:col :let={{_id, cms_content_area}} label="Title">{cms_content_area.title}</:col>
-      <:col :let={{_id, cms_content_area}} label="Subtitle">{cms_content_area.subtitle}</:col>
-      <:col :let={{_id, cms_content_area}} label="Body md">{cms_content_area.body_md}</:col>
+    <.admin_table id="cms_content_areas" rows={@streams.cms_content_areas} row_click={fn {_id, area} -> JS.navigate(DeadSimpleCms.path("/cms_content_areas/#{area.id}")) end}>
+      <:col :let={{_id, area}} label="Position">{area.position}</:col>
+      <:col :let={{_id, area}} label="Name">{area.name}</:col>
+      <:col :let={{_id, area}} label="Page">{area.cms_page_id}</:col>
+      <:col :let={{_id, area}} label="Visible">{area.visible}</:col>
+      <:col :let={{_id, area}} label="Updated">{Calendar.strftime(area.updated_at, "%Y-%m-%d")}</:col>
 
-      <:action :let={{_id, cms_content_area}}>
-        <div class="sr-only">
-          <.link navigate={DeadSimpleCms.path("/cms_content_areas/#{cms_content_area.id}")}>Show</.link>
-        </div>
-        <.link navigate={DeadSimpleCms.path("/cms_content_areas/#{cms_content_area.id}/edit")}>Edit</.link>
+      <:action :let={{_id, area}}>
+        <.link navigate={DeadSimpleCms.path("/cms_content_areas/#{area.id}/edit")}>Edit</.link>
       </:action>
 
-      <:action :let={{id, cms_content_area}}>
-        <.link
-          phx-click={JS.push("delete", value: %{id: cms_content_area.id}) |> hide("##{id}")}
-          data-confirm="Are you sure?"
-        >
+      <:action :let={{_id, area}}>
+        <.link phx-click={JS.push("delete", value: %{id: area.id})} data-confirm="Are you sure?">
           Delete
         </.link>
       </:action>
-    </.table>
+    </.admin_table>
     """
   end
 

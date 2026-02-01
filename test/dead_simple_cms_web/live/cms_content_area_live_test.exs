@@ -19,7 +19,7 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLiveTest do
 
       assert {:ok, form_live, _} =
                index_live
-               |> element("a", "New Cms content area")
+               |> element("a", "Add CMS Content Area")
                |> render_click()
                |> follow_redirect(conn, ~p"/cms_content_areas/new")
 
@@ -78,7 +78,7 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLiveTest do
     test "displays cms_content_area", %{conn: conn, data: data} do
       {:ok, _show_live, html} = live(conn, ~p"/cms_content_areas/#{data.cms_content_area}")
 
-      assert html =~ "Show Cms content area"
+      assert html =~ "Viewing CMS Content Area"
       assert html =~ data.cms_content_area.name
     end
 

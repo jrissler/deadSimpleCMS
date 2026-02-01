@@ -11,8 +11,8 @@ defmodule DeadSimpleCmsWeb.CmsImageLiveTest do
     test "lists all cms_images", %{conn: conn, data: data} do
       {:ok, _index_live, html} = live(conn, ~p"/cms_images")
 
-      assert html =~ "Listing Cms images"
-      assert html =~ data.cms_image.url
+      assert html =~ "Listing CMS Images"
+      assert html =~ data.cms_image.filename
     end
 
     test "saves new cms_image", %{conn: conn} do
@@ -20,7 +20,7 @@ defmodule DeadSimpleCmsWeb.CmsImageLiveTest do
 
       assert {:ok, form_live, _} =
                index_live
-               |> element("a", "New Cms image")
+               |> element("a", "Add CMS Image")
                |> render_click()
                |> follow_redirect(conn, ~p"/cms_images/new")
 
@@ -38,7 +38,7 @@ defmodule DeadSimpleCmsWeb.CmsImageLiveTest do
 
       html = render(index_live)
       assert html =~ "Cms image created successfully"
-      assert html =~ "some new alt"
+      assert html =~ "somefilename"
     end
 
     test "updates cms_image in listing", %{conn: conn, data: data} do
@@ -58,13 +58,13 @@ defmodule DeadSimpleCmsWeb.CmsImageLiveTest do
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#cms_image-form", cms_image: %{alt: "some updated alt", url: "https://example.com"})
+               |> form("#cms_image-form", cms_image: %{alt: "some updated alt", filename: "some updated filename", url: "https://example.com"})
                |> render_submit()
                |> follow_redirect(conn, ~p"/cms_images")
 
       html = render(index_live)
       assert html =~ "Cms image updated successfully"
-      assert html =~ "some updated alt"
+      assert html =~ "some updated filename"
     end
 
     test "deletes cms_image in listing", %{conn: conn, data: data} do
@@ -79,7 +79,7 @@ defmodule DeadSimpleCmsWeb.CmsImageLiveTest do
     test "displays cms_image", %{conn: conn, data: data} do
       {:ok, _show_live, html} = live(conn, ~p"/cms_images/#{data.cms_image}")
 
-      assert html =~ "Show Cms image"
+      assert html =~ "Viewing CMS Image"
       assert html =~ data.cms_image.alt
     end
 

@@ -363,7 +363,7 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
           <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
+            <span class="sr-only">Actions</span>
           </th>
         </tr>
       </thead>
@@ -440,6 +440,201 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
+    """
+  end
+
+  @doc ~S"""
+  Renders a content header with generic styling.
+
+  ## Examples
+
+      <.content_header main_title="Your Tenant" sub_title="Boats / Yachts for" description="These are data records for any type of vessel.">
+        <:action>
+          <.link patch={~p"/yachts/new"} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" />
+            Add Yacht
+          </.link>
+        </:action>
+        <:tab value="2" label="Active Yachts"></:tab>
+        <:tab value="3" label="Main Engines"></:tab>
+        <:tab value="4" label="Maintenance Items Due"></:tab>
+      </.content_header>
+  """
+  attr :main_title, :string, required: true
+  attr :sub_title, :string, required: true
+  attr :description, :string, required: true
+  attr :sub_description, :string, required: false, default: nil
+
+  slot :tab, required: false, doc: "the slot for showing tabs at bottom of header content" do
+    attr :label, :any
+    attr :value, :any
+  end
+
+  slot :action, doc: "the slot for showing a user action in the top right of card"
+
+  def content_header(assigns) do
+    assigns =
+      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+      end
+
+    ~H"""
+    <section aria-labelledby="overview-title">
+      <div class="overflow-hidden rounded-lg bg-white shadow">
+        <h2 class="sr-only" id="profile-overview-title">{@main_title} {@sub_title}</h2>
+        <div class="bg-white p-6">
+          <div class="sm:flex sm:items-center sm:justify-between">
+            <div class="sm:flex sm:space-x-5 pr-2">
+              <div class="flex-shrink-0">
+                <i class="fa-sub-nav fa-light fa-ship mx-auto fa-3x rounded-full"></i>
+              </div>
+              <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
+                <p class="text-sm font-medium text-gray-600">{@sub_title}</p>
+                <p class="text-xl font-bold text-gray-900 sm:text-2xl">{@main_title}</p>
+                <p class="text-sm font-medium text-gray-600">{@description}</p>
+                <p :if={@sub_description} class="text-sm font-medium text-gray-600 mt-1">{@sub_description}</p>
+              </div>
+            </div>
+            <div class="mt-5 flex justify-center sm:mt-0 min-w-max">
+              <%= for action <- @action do %>
+                {render_slot(action)}
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 bg-gray-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div :for={tab <- @tab} class="px-6 py-5 text-center text-sm font-medium">
+            <span class="text-gray-900">{tab[:value]}</span>
+            <span class="text-gray-600">{tab[:label]}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
+  @doc ~S"""
+  Renders an admin table with generic styling and optional tab navigation.
+
+  ## Examples
+
+      <.admin_table id="users" rows={@users}>
+        <:tab label="Active" patch="/boats?filters[sales_status]=active" class="your-class" />
+        <:tab label="Archived" patch="/boats?filters[sales_status]=archived" class="your-class" />
+        <:col :let={user} label="id"><%= user.id %></:col>
+        <:col :let={user} label="username"><%= user.username %></:col>
+      </.admin_table>
+  """
+  attr :id, :string, required: true
+  attr :rows, :list, required: true
+  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
+  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+
+  attr :row_item, :any,
+    default: &Function.identity/1,
+    doc: "the function for mapping each row before calling the :col and :action slots"
+
+  slot :col, required: true do
+    attr :label, :string
+    attr :extra_th_class, :string
+    attr :extra_td_class, :string
+  end
+
+  slot :tab do
+    attr :label, :string
+    attr :patch, :string
+    attr :class, :any
+  end
+
+  slot :action, doc: "the slot for showing user actions in the last table column"
+
+  def admin_table(assigns) do
+    assigns =
+      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+      end
+
+    ~H"""
+    <div class="px-4 sm:px-0 border-b-1">
+      <div class="sm:hidden mb-2">
+        <label for="question-tabs" class="sr-only">Select a tab</label>
+        <select id="question-tabs" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-rose-500">
+          <option selected="">Tab 1</option>
+          <option>Tab 2</option>
+          <option>Tab 3</option>
+        </select>
+      </div>
+      <div class="hidden sm:block">
+        <nav class="isolate flex divide-x divide-gray-200 shadow" aria-label="Tabs">
+          <.link :for={tab <- @tab} patch={tab[:patch]} class={["group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-6 text-center text-sm font-medium hover:bg-gray-50 focus:z-10", tab[:class]]}>
+            <span>{tab[:label]}</span>
+            <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5"></span>
+          </.link>
+        </nav>
+      </div>
+    </div>
+    <div class="bg-white">
+      <div class="mx-auto max-w-7xl">
+        <div class="px-2 sm:px-6 lg:px-4">
+          <div class="-mx-4 sm:-mx-0 pt-4">
+            <table class="min-w-full divide-y divide-gray-300">
+              <thead>
+                <tr>
+                  <th :for={col <- @col} class={["py-4 pl-2 pr-3 text-left text-sm font-semibold text-gray-900", col[:extra_th_class]]}>{col[:label]}</th>
+                  <th :if={@action != []} class="relative p-0 pb-4">
+                    <span class="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"} class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
+                <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
+                  <td :for={{col, i} <- Enum.with_index(@col)} phx-click={@row_click && @row_click.(row)} class={["relative whitespace-nowrap px-3 py-1 text-sm text-gray-500", col[:extra_td_class], @row_click && "hover:cursor-pointer"]}>
+                    <div class="block py-4 pr-6">
+                      <span class="absolute -inset-y-px right-0 -left-4 sm:rounded-l-xl" />
+                      <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
+                        {render_slot(col, @row_item.(row))}
+                      </span>
+                    </div>
+                  </td>
+                  <td :if={@action != []} class="relative w-14 p-0">
+                    <div class="relative whitespace-nowrap py-1 text-right text-sm font-medium pr-4">
+                      <span :for={action <- @action} class="relative font-medium leading-6 text-indigo-600 hover:text-indigo-900">
+                        {render_slot(action, @row_item.(row))}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  def non_list_table(assigns) do
+    ~H"""
+    <table class="data-table w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <%= for header <- @headers do %>
+            <th class="data-table-th text-left" scope="col">
+              {header}
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+
+      <tbody id={@object_name} class="bg-white divide-y divide-gray-200">
+        <%= for row <- @row do %>
+          <tr class="alternating">
+            {render_slot(row)}
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
     """
   end
 
