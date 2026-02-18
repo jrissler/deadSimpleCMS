@@ -18,6 +18,7 @@
     "dead_simple_cms.ex",
     "dead_simple_cms/application.ex",
     "dead_simple_cms_web/components/core_components.ex",
+    "dead_simple_cms_web/uploaders/s3_uploader.ex",
     "dead_simple_cms_web/router.ex",
     "dead_simple_cms_web/telemetry.ex",
     "dead_simple_cms_web/components/layouts.ex",

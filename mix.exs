@@ -69,6 +69,8 @@ defmodule DeadSimpleCms.MixProject do
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.0"},
       {:sweet_xml, "~> 0.7"},
+      # renders markdown
+      {:earmark, "~> 1.4"},
       {:hackney, "~> 1.20"},
       {:number, "~> 1.0.5"},
       {:lazy_html, ">= 0.1.0", only: :test},

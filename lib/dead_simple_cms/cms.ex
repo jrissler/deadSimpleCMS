@@ -39,7 +39,7 @@ defmodule DeadSimpleCms.Cms do
 
   """
   def get_cms_page!(id) do
-    repo().get!(CmsPage, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position]))
+    repo().get!(CmsPage, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position], preload: [:cms_image]))
   end
 
   @doc """
@@ -56,7 +56,7 @@ defmodule DeadSimpleCms.Cms do
   Layout, grouping, and presentation decisions remain the responsibility of the host application.
   """
   def get_published_page_by_slug(slug) do
-    visible_areas_query = from(a in CmsContentArea, where: a.visible == true, order_by: [asc: a.position])
+    visible_areas_query = from(a in CmsContentArea, where: a.visible == true, order_by: [asc: a.position], preload: [:cms_image])
 
     from(p in CmsPage, where: p.slug == ^slug and p.published == true, preload: [cms_content_areas: ^visible_areas_query])
     |> repo().one()
@@ -282,7 +282,7 @@ defmodule DeadSimpleCms.Cms do
       ** (Ecto.NoResultsError)
 
   """
-  def get_cms_content_area!(id), do: repo().get!(CmsContentArea, id)
+  def get_cms_content_area!(id), do: repo().get!(CmsContentArea, id) |> repo().preload(:cms_image)
 
   @doc """
   Creates a cms_content_area.

@@ -79,41 +79,38 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
     """
   end
 
-  @doc """
-  Renders a button with navigation support.
+  attr :type, :string, default: "button"
+  attr :variant, :string, default: "default"
+  attr :navigate, :any, default: nil
+  attr :patch, :any, default: nil
+  attr :href, :string, default: nil
+  attr :class, :string, default: ""
+  attr :rest, :global, include: ~w(disabled form name value phx-click phx-disable-with)
 
-  ## Examples
-
-      <.button>Send!</.button>
-      <.button phx-click="go" variant="primary">Send!</.button>
-      <.button navigate={~p"/"}>Home</.button>
-  """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :any
-  attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
-  def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+  def button(assigns) do
+    ~H"""
+    <%= if @navigate || @patch || @href do %>
+      <.link navigate={@navigate} patch={@patch} href={@href} class={button_class(@variant, @class)} {@rest}>{render_slot(@inner_block)}</.link>
+    <% else %>
+      <button type={@type} class={button_class(@variant, @class)} {@rest}>{render_slot(@inner_block)}</button>
+    <% end %>
+    """
+  end
 
-    assigns =
-      assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+  defp button_class(variant, extra_class) do
+    base = "inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none"
 
-    if rest[:href] || rest[:navigate] || rest[:patch] do
-      ~H"""
-      <.link class={@class} {@rest}>
-        {render_slot(@inner_block)}
-      </.link>
-      """
-    else
-      ~H"""
-      <button class={@class} {@rest}>
-        {render_slot(@inner_block)}
-      </button>
-      """
-    end
+    variant_class =
+      case variant do
+        "primary" -> "bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:outline-indigo-600"
+        "danger" -> "bg-red-600 text-white hover:bg-red-500 focus-visible:outline-red-600"
+        "default" -> "bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-indigo-600"
+        _ -> "bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-indigo-600"
+      end
+
+    Enum.join(Enum.reject([base, variant_class, extra_class], &(&1 in [nil, ""])), " ")
   end
 
   @doc """
@@ -444,26 +441,55 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
   end
 
   @doc ~S"""
-  Renders a content header with generic styling.
+  Renders a styled “hero” content header card.
+
+  This component provides a high-contrast, dark gradient header with subtle glow accents, a leading icon tile, and optional right-aligned actions. An optional tab strip can be rendered along the bottom for summary metrics or quick context.
+
+  ## Assigns
+
+    * `:main_title` - Primary heading text (required).
+    * `:sub_title` - Secondary heading text shown above the main title (required).
+    * `:description` - Short description line shown under the title (required).
+    * `:sub_description` - Optional second description line shown under `:description`.
+    * `:icon_class` - Icon CSS class for the leading icon (FontAwesome / Heroicons class string). Defaults to `"hero-chart-bar-square"`.
+
+  ## Slots
+
+    * `:action` - Optional slot rendered in the top-right for CTAs (links/buttons).
+    * `:tab` - Optional slot(s) rendered as a bottom strip of summary items. Each tab supports:
+
+      * `:value` - The primary value (number/text).
+      * `:label` - The descriptor label.
 
   ## Examples
 
-      <.content_header main_title="Your Tenant" sub_title="Boats / Yachts for" description="These are data records for any type of vessel.">
+      <.content_header
+        main_title="Listing Inquiries"
+        sub_title="Sophisticated Yachting"
+        description="Inquiries are records where a potential customer has filled out the contact-us form."
+        sub_description="Review, follow up, and track conversions."
+        icon_class="fa-light fa-ship"
+      >
         <:action>
-          <.link patch={~p"/yachts/new"} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.link
+            patch={~p"/posts/new"}
+            class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
             <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" />
-            Add Yacht
+            Add Post
           </.link>
         </:action>
-        <:tab value="2" label="Active Yachts"></:tab>
-        <:tab value="3" label="Main Engines"></:tab>
-        <:tab value="4" label="Maintenance Items Due"></:tab>
+
+        <:tab value="2" label="Active" />
+        <:tab value="3" label="Drafts" />
+        <:tab value="4" label="Scheduled" />
       </.content_header>
   """
   attr :main_title, :string, required: true
-  attr :sub_title, :string, required: true
+  attr :sub_title, :string, required: false, default: nil
   attr :description, :string, required: true
   attr :sub_description, :string, required: false, default: nil
+  attr :icon_class, :string, required: false, default: "hero-chart-bar-square"
 
   slot :tab, required: false, doc: "the slot for showing tabs at bottom of header content" do
     attr :label, :any
@@ -479,22 +505,34 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
       end
 
     ~H"""
-    <section aria-labelledby="overview-title">
-      <div class="overflow-hidden rounded-lg bg-white shadow">
-        <h2 class="sr-only" id="profile-overview-title">{@main_title} {@sub_title}</h2>
-        <div class="bg-white p-6">
+    <section aria-labelledby="overview-title" class="mt-2">
+      <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <h2 class="sr-only" id="overview-title">
+          {@main_title}
+          <span :if={@sub_title && @sub_title != ""}>{@sub_title}</span>
+        </h2>
+
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 opacity-[0.96]"></div>
+        <div class="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-cyan-500/20 blur-3xl"></div>
+        <div class="absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl"></div>
+
+        <div class="relative p-6 sm:p-7">
           <div class="sm:flex sm:items-center sm:justify-between">
             <div class="sm:flex sm:space-x-5 pr-2">
               <div class="flex-shrink-0">
-                <i class="fa-sub-nav fa-light fa-ship mx-auto fa-3x rounded-full"></i>
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
+                  <i class={[@icon_class, "text-cyan-200"]}></i>
+                </div>
               </div>
-              <div class="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-                <p class="text-sm font-medium text-gray-600">{@sub_title}</p>
-                <p class="text-xl font-bold text-gray-900 sm:text-2xl">{@main_title}</p>
-                <p class="text-sm font-medium text-gray-600">{@description}</p>
-                <p :if={@sub_description} class="text-sm font-medium text-gray-600 mt-1">{@sub_description}</p>
+
+              <div class="mt-4 text-center sm:mt-0 sm:pt-0 sm:text-left">
+                <p :if={@sub_title} class="text-sm font-medium text-white/70">{@sub_title}</p>
+                <p class="text-xl font-semibold text-white sm:text-2xl">{@main_title}</p>
+                <p class="mt-1 text-sm font-medium text-white/70">{@description}</p>
+                <p :if={@sub_description} class="mt-1 text-sm font-medium text-white/70">{@sub_description}</p>
               </div>
             </div>
+
             <div class="mt-5 flex justify-center sm:mt-0 min-w-max">
               <%= for action <- @action do %>
                 {render_slot(action)}
@@ -502,10 +540,12 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 bg-gray-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        
+    <!-- tabs -->
+        <div class="relative grid grid-cols-1 divide-y divide-white/10 border-t border-white/10 bg-white/[0.04] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <div :for={tab <- @tab} class="px-6 py-5 text-center text-sm font-medium">
-            <span class="text-gray-900">{tab[:value]}</span>
-            <span class="text-gray-600">{tab[:label]}</span>
+            <span class="text-white">{tab[:value]}</span>
+            <span class="ml-2 text-white/70">{tab[:label]}</span>
           </div>
         </div>
       </div>

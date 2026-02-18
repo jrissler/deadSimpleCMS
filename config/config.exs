@@ -11,14 +11,6 @@ config :dead_simple_cms,
   ecto_repos: [DeadSimpleCms.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true],
   repo: DeadSimpleCms.Repo,
-  s3: [
-    enabled?: true,
-    bucket: System.get_env("DSCMS_S3_BUCKET"),
-    region: System.get_env("DSCMS_S3_REGION"),
-    # optional CDN base; if nil, use https://<bucket>.s3.amazonaws.com/<key>
-    public_base_url: System.get_env("DSCMS_S3_PUBLIC_BASE_URL"),
-    prefix: "dead_simple_cms"
-  ],
   endpoint: DeadSimpleCmsWeb.Endpoint
 
 # Configure the endpoint

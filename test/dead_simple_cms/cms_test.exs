@@ -16,11 +16,11 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_cms_page!/1 returns the cms_page with given id", %{data: data} do
-      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, :cms_content_areas)
+      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, cms_content_areas: :cms_image)
     end
 
     test "get_published_page_by_slug/1 returns the cms_page with given slug", %{data: data} do
-      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, :cms_content_areas)
+      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, cms_content_areas: :cms_image)
     end
 
     test "create_cms_page/1 with valid data creates a cms_page" do
@@ -49,7 +49,7 @@ defmodule DeadSimpleCms.CmsTest do
     test "update_cms_page/2 with invalid data returns error changeset", %{data: data} do
       assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_page(data.cms_page, params_for(:cms_page, title: ""))
       assert errors == [{:title, {"can't be blank", [validation: :required]}}]
-      assert Repo.preload(data.cms_page, :cms_content_areas) == Cms.get_cms_page!(data.cms_page.id)
+      assert Repo.preload(data.cms_page, cms_content_areas: :cms_image) == Cms.get_cms_page!(data.cms_page.id)
     end
 
     test "delete_cms_page/1 deletes the cms_page", %{data: data} do
@@ -124,7 +124,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_cms_content_area!/1 returns the cms_content_area with given id", %{data: data} do
-      assert Cms.get_cms_content_area!(data.cms_content_area.id) == data.cms_content_area
+      assert Cms.get_cms_content_area!(data.cms_content_area.id) == Repo.preload(data.cms_content_area, :cms_image)
     end
 
     test "create_cms_content_area/1 with valid data creates a cms_content_area", %{data: data} do
@@ -163,7 +163,7 @@ defmodule DeadSimpleCms.CmsTest do
     test "update_cms_content_area/2 with invalid data returns error changeset", %{data: data} do
       assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_content_area(data.cms_content_area, %{name: ""})
       assert errors == [{:name, {"can't be blank", [validation: :required]}}]
-      assert data.cms_content_area == Cms.get_cms_content_area!(data.cms_content_area.id)
+      assert Repo.preload(data.cms_content_area, :cms_image) == Cms.get_cms_content_area!(data.cms_content_area.id)
     end
 
     test "delete_cms_content_area/1 deletes the cms_content_area", %{data: data} do
