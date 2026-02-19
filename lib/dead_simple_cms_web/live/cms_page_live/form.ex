@@ -18,7 +18,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
       <.input field={@form[:published]} type="checkbox" label="Published" />
       <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
       <footer>
-        <.button phx-disable-with="Saving..." variant="primary">Save Cms page</.button>
+        <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Cms page</.button>
         <.button navigate={return_path(@return_to, @cms_page)}>Cancel</.button>
       </footer>
     </.form>
@@ -56,7 +56,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                 </div>
 
                 <div class="mt-4 flex gap-2">
-                  <.button phx-disable-with="Saving..." variant="primary">Save Area</.button>
+                  <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Area</.button>
                 </div>
               </.form>
             </div>

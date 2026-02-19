@@ -19,7 +19,7 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Form do
       <.input field={@form[:content_type]} type="text" label="Filename" />
       <.input field={@form[:size]} type="text" label="Size" />
       <footer>
-        <.button phx-disable-with="Saving..." variant="primary">Save Cms image</.button>
+        <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Cms image</.button>
         <.button navigate={return_path(@return_to, @cms_image)}>Cancel</.button>
       </footer>
     </.form>
