@@ -2,7 +2,9 @@
 
 DeadSimpleCms is a deliberately minimal Phoenix CMS library.
 
-It is designed to solve a very specific problem: **allow non-technical users to update structured content without breaking carefully designed pages**.
+It is designed to solve a very specific problem: **allow non-technical
+users to update structured content without breaking carefully designed
+pages**.
 
 It is _not_ a general-purpose CMS.
 
@@ -17,25 +19,23 @@ DeadSimpleCms provides:
 - Validation, ordering, and visibility flags
 - Repo indirection so the host app owns persistence
 - A clean boundary between **content** and **rendering**
+- External S3-based image uploads via LiveView uploaders
 
-That’s it.
+That's it.
 
 ---
 
-## What It Is _Not_
+## Items Optionally Implemented by Parent App
 
 DeadSimpleCms intentionally does **not** include:
 
-- Page builders
 - Themes
 - Frontend rendering opinions
-- Authentication or authorization
-- Roles or permissions
+- Authentication and/or authorization
+- Roles and permissions
 - Caching layers
 - Publishing workflows
 - Database ownership
-
-If you want those things, this library is not for you.
 
 ---
 
@@ -46,15 +46,13 @@ DeadSimpleCms is built around a few non-negotiable principles:
 - **The host app owns the database**
 - **The host app owns layout and rendering**
 - **The CMS owns only content structure and admin CRUD**
-- **Small surface area beats flexibility**
-- **Predictability beats power**
+- **Small surface area**
 
 This makes the library:
 
 - Easy to reason about
 - Easy to remove
 - Safe to extend
-- Resistant to scope creep
 
 ---
 
@@ -62,23 +60,41 @@ This makes the library:
 
 DeadSimpleCms provides three core concepts:
 
-- **CMS Pages** (`cms_pages`)
-  - `slug`
-  - `title`
-  - `published`
-  - `published_at`
+### CMS Pages (`cms_pages`)
 
-- **CMS Content Areas** (`cms_content_areas`)
-  - Belong to a page
-  - Ordered via `position`
-  - Optional `name`
-  - Optional `visible` flag
-  - Structured fields (`title`, `subtitle`, `body_md`, etc.)
+- `slug`
+- `title`
+- `published`
+- `published_at`
 
-- **CMS Images** (`cms_images`)
-  - Simple image records for admin usage
+Public reads should typically filter on `published == true`.
 
-The CMS does **not** dictate how these are rendered.
+---
+
+### CMS Content Areas (`cms_content_areas`)
+
+- Belong to a page via `page_id`
+- Ordered via `position` (integer)
+- Optional `name` (scoped per page)
+- Optional `visible` flag
+- Structured fields (`title`, `subtitle`, `body_md`, etc.)
+
+Admin views allow move up/down and renumber operations.\
+No drag-and-drop.
+
+---
+
+### CMS Images (`cms_images`)
+
+- `filename`
+- `url`
+- `alt`
+- `caption`
+- `size`
+- `content_type`
+
+Images are uploaded directly to S3 using presigned URLs.\
+The CMS stores metadata only.
 
 ---
 
@@ -100,7 +116,7 @@ mix deps.get
 
 ---
 
-### 2. Configure the Repo and Endpoint
+### 2. Configure Repo, Endpoint, Layout, and S3
 
 DeadSimpleCms does not define its own Repo or Endpoint.
 
@@ -112,37 +128,79 @@ config :dead_simple_cms,
   repo: YourApp.Repo,
   endpoint: YourAppWeb.Endpoint,
   admin_layout: {YourAppWeb.Layouts, :app},
-  admin_path: "/cms"
+  admin_path: "/cms",
+  s3: [
+    bucket: "your-bucket",
+    region: "your-region ie: us-east-1",
+    access_key_id: "your-key",
+    secret_access_key: "your-secret"
+  ]
 ```
 
-- `repo` **required**
-- `endpoint` **required**
-- `admin_layout` optional (defaults to the CMS layout)
-- `admin_path` optional
+### Required
+
+- `repo`
+- `endpoint`
+- `s3.bucket`
+- `s3.region`
+- `s3.access_key_id`
+- `s3.secret_access_key`
+
+### Optional
+
+- `admin_layout`
+- `admin_path`
 
 ---
 
-### 3. Install Migrations (Host-Owned)
+### 3. Install Migrations and Assets
 
 DeadSimpleCms does **not** run migrations automatically.
 
-Copy them into your app:
+Run:
 
 ```bash
 mix dead_simple_cms.install
-```
-
-Then run:
-
-```bash
 mix ecto.migrate
 ```
+
+This will:
+
+- Copy migration files into your app (`priv/repo/migrations`)
+- Copy a baseline `cms_components.ex` file (if not present)
+- Copy `assets/js/uploader.js` (if not present)
 
 Your app owns the schema from this point forward.
 
 ---
 
-### 4. Mount Admin Routes
+### 4. Wire Uploaders (Manual Step)
+
+Because JavaScript bootstrapping varies per app, DeadSimpleCms does
+**not** patch your `app.js` automatically.
+
+In `assets/js/app.js`:
+
+1.  Import the uploader:
+
+```javascript
+import Uploaders from "./uploader";
+```
+
+2.  Pass it into LiveSocket:
+
+```javascript
+let liveSocket = new LiveSocket("/live", Socket, {
+  params: { _csrf_token: csrfToken },
+  uploaders: Uploaders,
+});
+```
+
+This enables direct-to-S3 PUT uploads via presigned URLs.
+
+---
+
+### 5. Mount Admin Routes
 
 ```elixir
 import DeadSimpleCmsWeb.Router, only: [dead_simple_cms_admin_routes: 0]
@@ -154,78 +212,55 @@ scope "/admin", YourAppWeb do
 end
 ```
 
-Authentication is the host app’s responsibility.
-
 ---
 
-## Rendering Content
+## Public Page Rendering Example
 
-DeadSimpleCms **does not render frontend content**.
+DeadSimpleCms does not render frontend pages.
 
-A simple baseline component will be copied into your app, for example:
+Add a route / module in your host app:
 
+```elixir
+live "/pages/:slug", CmsPageLive, :show
 ```
-lib/your_app_web/cms_components.ex
+
+Minimal LiveView example:
+
+```elixir
+def mount(%{"slug" => slug}, _session, socket) do
+  page = DeadSimpleCms.Cms.get_published_page_by_slug!(slug)
+  areas = DeadSimpleCms.Cms.list_areas_for_page(page.id)
+
+  {:ok, assign(socket, page: page, areas: areas)}
+end
 ```
 
-From there:
+Render using your own components:
 
-- You decide layout
-- You decide styling
-- You decide sanitization
-- You decide markdown handling
+```elixir
+<%= for area <- @areas do %>
+  <.cms_text_block area={area} />
+<% end %>
+```
 
-The CMS only provides validated content.
+You own layout, styling, sanitization, and markdown rendering.
 
 ---
 
 ## LiveView Layout Contract (`inner_content` vs `inner_block`)
 
-DeadSimpleCms admin pages are implemented as **Phoenix LiveViews**.
-
-This means layout behavior follows Phoenix LiveView rules — not component rules.
+DeadSimpleCms admin pages are implemented as Phoenix LiveViews.
 
 ### Critical distinction
 
-- **LiveView layouts** receive rendered content via `@inner_content`
-- **Function components** receive content via the `@inner_block` slot
+- LiveView layouts receive rendered content via `@inner_content`
+- Function components receive content via the `@inner_block` slot
 
-These two mechanisms are **not interchangeable**.
+These are not interchangeable.
 
-DeadSimpleCms:
+Your `admin_layout` must support LiveView layout semantics.
 
-- Does **not** wrap layouts manually
-- Applies layouts via:
-
-```elixir
-use Phoenix.LiveView, layout: {YourAppWeb.Layouts, :app}
-```
-
-Because of this, any layout used as `admin_layout` must be compatible with LiveView layouts.
-
----
-
-### Layout Used _Only_ as a LiveView Layout
-
-If your layout is only used by LiveView:
-
-```heex
-{@inner_content}
-```
-
----
-
-### Layout Used Both Manually and by LiveView (Recommended)
-
-If your app already uses the layout as a function component:
-
-```heex
-<Layouts.app>
-  ...
-</Layouts.app>
-```
-
-Then the layout should support **both** call styles:
+If used both manually and by LiveView, support both styles:
 
 ```elixir
 slot :inner_block
@@ -243,26 +278,19 @@ def app(assigns) do
 end
 ```
 
-This allows:
-
-- Existing LiveViews to continue working
-- DeadSimpleCms to integrate cleanly
-- No layout duplication
-- No forced refactors
+The host app owns layout contracts.
 
 ---
 
-### Why DeadSimpleCms Works This Way
+## Post-Install Checklist
 
-This behavior is dictated by **Phoenix LiveView**, not by the CMS.
+After setup, verify:
 
-DeadSimpleCms intentionally:
-
-- Does not mutate layout assigns
-- Does not wrap layouts conditionally
-- Does not inject compatibility layers
-
-The host app owns layout contracts.
+- `/cms` (or your configured `admin_path`) loads
+- You can create a CMS page
+- You can add content areas
+- Image uploads succeed (confirms S3 + JS wiring)
+- Public page route renders published content
 
 ---
 
@@ -275,9 +303,7 @@ mix phx.server
 
 Visit:
 
-```
-http://localhost:4000
-```
+    http://localhost:4000
 
 ---
 
@@ -285,6 +311,7 @@ http://localhost:4000
 
 DeadSimpleCms is intentionally boring.
 
-If you need power, flexibility, or abstraction — look elsewhere.
+It is a **content-backed template system**, not a traditional CMS.
 
-If you need something small, predictable, and easy to reason about — this is exactly that.
+If you need something small, predictable, and safe --- this is exactly
+that.
