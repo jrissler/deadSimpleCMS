@@ -34,8 +34,8 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     templates_root = Path.join([:code.priv_dir(:dead_simple_cms) |> to_string(), "templates", "dead_simple_cms.install"])
     migrations_src = Path.join([templates_root, "migrations"])
     migrations_dest = Path.join(["priv", "repo", "migrations"])
-    assets_uploader_src = Path.join([templates_root, "assets", "js", "uploader.js"])
-    assets_uploader_dest = Path.join(["assets", "js", "uploader.js"])
+    assets_uploader_src = Path.join([templates_root, "assets", "js", "uploaders.js"])
+    assets_uploader_dest = Path.join(["assets", "js", "uploaders.js"])
 
     if File.exists?(assets_uploader_src) do
       File.mkdir_p!(Path.dirname(assets_uploader_dest))
@@ -99,7 +99,7 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     Mix.shell().info("✅ DeadSimpleCMS install complete. Next:")
     Mix.shell().info("[ ] mix ecto.migrate")
     Mix.shell().info("[ ] Add DeadSimpleCmsWeb.Router.dead_simple_cms_admin_routes() to your router")
-    Mix.shell().info("[ ] Import ./uploader and register uploaders in assets/js/app.js (LiveSocket opts)")
+    Mix.shell().info("[ ] Import ./uploaders and register uploaders in assets/js/app.js (LiveSocket opts)")
   end
 
   defp migration_basename(filename) do
