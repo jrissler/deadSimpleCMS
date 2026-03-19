@@ -73,15 +73,15 @@ defmodule DeadSimpleCmsWeb.Router do
       live "/cms_content_areas/:id", DeadSimpleCmsWeb.CmsContentAreaLive.Show, :show
       live "/cms_content_areas/:id/edit", DeadSimpleCmsWeb.CmsContentAreaLive.Form, :edit
 
-      live "/cms_bios", CmsBioLive.Index, :index
-      live "/cms_bios/new", CmsBioLive.Form, :new
-      live "/cms_bios/:id", CmsBioLive.Show, :show
-      live "/cms_bios/:id/edit", CmsBioLive.Form, :edit
+      live "/cms_bios", DeadSimpleCmsWeb.CmsBioLive.Index, :index
+      live "/cms_bios/new", DeadSimpleCmsWeb.CmsBioLive.Form, :new
+      live "/cms_bios/:id", DeadSimpleCmsWeb.CmsBioLive.Show, :show
+      live "/cms_bios/:id/edit", DeadSimpleCmsWeb.CmsBioLive.Form, :edit
 
-      live "/cms_testimonials", CmsTestimonialLive.Index, :index
-      live "/cms_testimonials/new", CmsTestimonialLive.Form, :new
-      live "/cms_testimonials/:id", CmsTestimonialLive.Show, :show
-      live "/cms_testimonials/:id/edit", CmsTestimonialLive.Form, :edit
+      live "/cms_testimonials", DeadSimpleCmsWeb.CmsTestimonialLive.Index, :index
+      live "/cms_testimonials/new", DeadSimpleCmsWeb.CmsTestimonialLive.Form, :new
+      live "/cms_testimonials/:id", DeadSimpleCmsWeb.CmsTestimonialLive.Show, :show
+      live "/cms_testimonials/:id/edit", DeadSimpleCmsWeb.CmsTestimonialLive.Form, :edit
     end
   end
 
