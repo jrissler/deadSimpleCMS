@@ -44,6 +44,11 @@ defmodule DeadSimpleCmsWeb.Router do
     live "/cms_content_areas/new", CmsContentAreaLive.Form, :new
     live "/cms_content_areas/:id", CmsContentAreaLive.Show, :show
     live "/cms_content_areas/:id/edit", CmsContentAreaLive.Form, :edit
+
+    live "/cms_bios", CmsBioLive.Index, :index
+    live "/cms_bios/new", CmsBioLive.Form, :new
+    live "/cms_bios/:id", CmsBioLive.Show, :show
+    live "/cms_bios/:id/edit", CmsBioLive.Form, :edit
   end
 
   defmacro dead_simple_cms_admin_routes do
@@ -62,6 +67,11 @@ defmodule DeadSimpleCmsWeb.Router do
       live "/cms_content_areas/new", DeadSimpleCmsWeb.CmsContentAreaLive.Form, :new
       live "/cms_content_areas/:id", DeadSimpleCmsWeb.CmsContentAreaLive.Show, :show
       live "/cms_content_areas/:id/edit", DeadSimpleCmsWeb.CmsContentAreaLive.Form, :edit
+
+      live "/cms_bios", CmsBioLive.Index, :index
+      live "/cms_bios/new", CmsBioLive.Form, :new
+      live "/cms_bios/:id", CmsBioLive.Show, :show
+      live "/cms_bios/:id/edit", CmsBioLive.Form, :edit
     end
   end
 
