@@ -14,12 +14,14 @@ defmodule DeadSimpleCms.Factory do
     cms_page = insert(:cms_page)
     cms_content_area = insert(:cms_content_area, cms_page_id: cms_page.id, cms_image_id: cms_image.id)
     cms_bio = insert(:cms_bio, cms_image_id: cms_image.id)
+    cms_testimonial = insert(:cms_testimonial)
 
     %{
       cms_image: cms_image,
       cms_page: cms_page,
       cms_content_area: cms_content_area,
-      cms_bio: cms_bio
+      cms_bio: cms_bio,
+      cms_testimonial: cms_testimonial
     }
   end
 
@@ -78,5 +80,17 @@ defmodule DeadSimpleCms.Factory do
     }
 
     # cms_image_id
+  end
+
+  def cms_testimonial_factory do
+    %DeadSimpleCms.SpecialContent.CmsTestimonial{
+      name: "Dr. Evil",
+      title: "Founder",
+      company: "Evil Enterprises",
+      source: "Google",
+      quote: "James Bond is relentless, annoyingly competent, and far more difficult to eliminate than any reasonable person should be. I would not recommend him as an enemy, but as an operative, he is undeniably effective.",
+      stars: 5,
+      visible: true
+    }
   end
 end
