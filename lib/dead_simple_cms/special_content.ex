@@ -40,6 +40,22 @@ defmodule DeadSimpleCms.SpecialContent do
   def get_cms_bio!(id), do: repo().get!(CmsBio, id) |> repo().preload(:cms_image)
 
   @doc """
+  Gets a single cms_bio by slug.
+
+  Raises `Ecto.NoResultsError` if the Cms bio does not exist.
+
+  ## Examples
+
+      iex> get_cms_bio_by_slug!("john-smith")
+      %CmsBio{}
+
+      iex> get_cms_bio_by_slug!("missing-slug")
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_cms_bio_by_slug!(slug), do: repo().get_by!(CmsBio, slug: slug) |> repo().preload(:cms_image)
+
+  @doc """
   Creates a cms_bio.
 
   ## Examples

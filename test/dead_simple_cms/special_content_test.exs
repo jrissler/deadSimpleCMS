@@ -18,6 +18,10 @@ defmodule DeadSimpleCms.SpecialContentTest do
       assert SpecialContent.get_cms_bio!(data.cms_bio.id) == Repo.preload(data.cms_bio, :cms_image)
     end
 
+    test "get_cms_bio_by_slug!/1 returns the cms_bio with given id", %{data: data} do
+      assert SpecialContent.get_cms_bio_by_slug!(data.cms_bio.slug) == Repo.preload(data.cms_bio, :cms_image)
+    end
+
     test "create_cms_bio/1 with valid data creates a cms_bio", %{data: data} do
       attrs = params_for(:cms_bio, name: "some name", cms_image_id: data.cms_image.id)
 
