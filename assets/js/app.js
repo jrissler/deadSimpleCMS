@@ -25,11 +25,77 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/dead_simple_cms"
 import topbar from "../vendor/topbar"
 
+import EasyMDE from "../vendor/easymde.min.js"
+window.EasyMDE = EasyMDE
+
+const CustomHooks = {};
+
+CustomHooks.EasyMDE = {
+  mounted() {
+    if (this.editor) return
+
+    this.targetInput = document.getElementById(this.el.dataset.targetInputId)
+    if (!this.targetInput) return
+
+    this.editorElement = document.createElement("textarea")
+    this.editorElement.value = this.targetInput.value || this.el.dataset.initialValue || ""
+    this.el.appendChild(this.editorElement)
+
+    this.editor = new EasyMDE({
+      element: this.editorElement,
+      spellChecker: false,
+      status: false,
+      autoDownloadFontAwesome: true,
+      forceSync: true,
+      autosave: { enabled: false },
+      toolbar: [
+        "bold",
+        "italic",
+        "heading",
+        "|",
+        "quote",
+        "unordered-list",
+        "ordered-list",
+        "|",
+        "link",
+        "|",
+        "guide"
+      ]
+    })
+
+    this.codemirror = this.editor.codemirror
+
+    this.onChange = () => {
+      if (!this.targetInput) return
+      this.targetInput.value = this.editor.value()
+      this.targetInput.dispatchEvent(new Event("input", { bubbles: true }))
+    }
+
+    this.codemirror.on("change", this.onChange)
+  },
+
+  destroyed() {
+    if (this.codemirror && this.onChange) {
+      this.codemirror.off("change", this.onChange)
+    }
+
+    if (this.editor) {
+      this.editor.toTextArea()
+    }
+
+    this.editor = null
+    this.codemirror = null
+    this.editorElement = null
+    this.targetInput = null
+    this.onChange = null
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, ...CustomHooks},
 })
 
 // Show progress bar on live navigation and form submits

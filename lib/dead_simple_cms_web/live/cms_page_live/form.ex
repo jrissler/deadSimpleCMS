@@ -45,14 +45,25 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                 </div>
               </div>
 
-              <.form for={@area_forms[area.id]} id={"cms_content_area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area">
+              <.form for={@area_forms[area.id]} id={"content-area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area">
                 <input type="hidden" name="_id" value={area.id} />
 
                 <div class="grid grid-cols-1 gap-4">
-                  <.input field={@area_forms[area.id][:visible]} type="checkbox" label="Visible" />
-                  <.input field={@area_forms[area.id][:title]} type="text" label="Title" />
-                  <.input field={@area_forms[area.id][:subtitle]} type="text" label="Subtitle" />
-                  <.input field={@area_forms[area.id][:body_md]} type="textarea" label="Body (Markdown)" />
+                  <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
+                  <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
+                  <.input field={@area_forms[area.id][:subtitle]} id={"content-area-#{area.id}-subtitle"} type="text" label="Subtitle" />
+
+                  <div class="space-y-2 fieldset">
+                    <label for={"content-area-#{area.id}-body-md-input"} class="label mb-1">
+                      Body (Markdown)
+                    </label>
+
+                    <textarea id={"content-area-#{area.id}-body-md-input"} name={@area_forms[area.id][:body_md].name} class="hidden"><%= Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || "" %></textarea>
+
+                    <div id={"content-area-#{area.id}-body-md-editor-wrapper"} phx-update="ignore">
+                      <div id={"content-area-#{area.id}-body-md-editor"} phx-hook="EasyMDE" data-target-input-id={"content-area-#{area.id}-body-md-input"} data-initial-value={Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || ""}></div>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="mt-4 flex gap-2">

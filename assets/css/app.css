@@ -6,6 +6,8 @@
 @source "../js";
 @source "../../lib/dead_simple_cms_web";
 
+@import "../vendor/easymde.min.css";
+
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";
