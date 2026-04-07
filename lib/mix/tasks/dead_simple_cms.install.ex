@@ -10,10 +10,14 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     - EEx migration templates -> host priv/repo/migrations/<timestamp>_*.exs
     - required CmsComponents module -> host lib/<app>_web/components/cms_components.ex (or a user-provided path)
     - required assets/js/uploaders.js
+    - required assets/js/easy_mde.js
+    - required assets/css/easy_mde.css
 
   Re-running the installer:
     - skips migrations already installed (matched by basename, ignoring timestamp)
     - skips uploaders.js if it already exists
+    - skips easy_mde.js if it already exists
+    - skips easy_mde.css if it already exists
     - skips cms_components.ex if it already exists
 
   Usage:
@@ -40,9 +44,15 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     migrations_dest = Path.join(["priv", "repo", "migrations"])
     assets_uploader_src = Path.join([templates_root, "assets", "js", "uploaders.js"])
     assets_uploader_dest = Path.join(["assets", "js", "uploaders.js"])
+    assets_easy_mde_js_src = Path.join([templates_root, "assets", "js", "easymde.min.js"])
+    assets_easy_mde_js_dest = Path.join(["assets", "js", "easymde.min.js"])
+    assets_easy_mde_css_src = Path.join([templates_root, "assets", "css", "easymde.min.css"])
+    assets_easy_mde_css_dest = Path.join(["assets", "css", "easymde.min.css"])
     components_src = Path.join([templates_root, "web", "cms_components.ex.eex"])
 
     copy_optional_if_missing!(assets_uploader_src, assets_uploader_dest, assigns, "assets uploader")
+    copy_optional_if_missing!(assets_easy_mde_js_src, assets_easy_mde_js_dest, assigns, "EasyMDE JS")
+    copy_optional_if_missing!(assets_easy_mde_css_src, assets_easy_mde_css_dest, assigns, "EasyMDE CSS")
     copy_migrations!(migrations_src, migrations_dest, assigns)
     copy_optional_if_missing!(components_src, components_path, assigns, "components")
 
@@ -50,7 +60,8 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     Mix.shell().info("✅ DeadSimpleCMS install complete. Next:")
     Mix.shell().info("[ ] mix ecto.migrate")
     Mix.shell().info("[ ] Add DeadSimpleCmsWeb.Router.dead_simple_cms_admin_routes() to your router")
-    Mix.shell().info("[ ] Import ./uploaders and register uploaders in assets/js/app.js (LiveSocket opts)")
+    Mix.shell().info("[ ] Import ./uploaders and ./easy_mde in assets/js/app.js")
+    Mix.shell().info("[ ] Import ./easy_mde.css in assets/css/app.css")
   end
 
   defp copy_optional_if_missing!(src, dest, assigns, label) do
@@ -60,7 +71,7 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
       if File.exists?(dest) do
         Mix.shell().info("skipped #{dest} (already exists)")
       else
-        rendered = EEx.eval_file(src, assigns: assigns)
+        rendered = render_template(src, assigns)
         File.write!(dest, rendered)
         Mix.shell().info("created #{dest}")
       end
@@ -104,6 +115,14 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
         bump_timestamp!()
       end
     end)
+  end
+
+  defp render_template(src, assigns) do
+    if String.ends_with?(src, ".eex") do
+      EEx.eval_file(src, assigns: assigns)
+    else
+      File.read!(src)
+    end
   end
 
   defp migration_already_installed?(existing_files, basename) do
