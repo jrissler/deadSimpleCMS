@@ -21,6 +21,7 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
         <div class="space-y-8">
           <div class="grid grid-cols-1 gap-6">
             <.input field={@form[:cms_page_id]} type="select" label="Page" options={@pages} prompt="Select a page" />
+            <.input field={@form[:cms_slot_id]} type="select" label="Slot (template)" options={@cms_slots} prompt="Select a slot (template)" />
             <.input field={@form[:cms_image_id]} type="hidden" />
             <.input field={@form[:position]} type="number" label="Position" />
             <.input field={@form[:name]} type="text" label="Name" />
@@ -102,10 +103,12 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
   @impl true
   def mount(params, _session, socket) do
     pages = Cms.list_cms_pages() |> Enum.map(&{&1.title, &1.id})
+    cms_slots = Cms.list_cms_slots() |> Enum.map(&{&1.name, &1.id})
 
     {:ok,
      socket
      |> assign(:pages, pages)
+     |> assign(:cms_slots, cms_slots)
      |> assign(:return_to, return_to(params["return_to"]))
      |> assign(:current_image, nil)
      |> allow_upload(:image, accept: ~w(.jpg .jpeg .png .gif .webp .heic .heif .bmp .tiff), max_entries: 1, max_file_size: 20_000_000, external: &presign_upload/2)

@@ -35,6 +35,11 @@ defmodule DeadSimpleCmsWeb.Router do
     live "/cms_pages/:id", CmsPageLive.Show, :show
     live "/cms_pages/:id/edit", CmsPageLive.Form, :edit
 
+    live "/cms_slots", CmsSlotLive.Index, :index
+    live "/cms_slots/new", CmsSlotLive.Form, :new
+    live "/cms_slots/:id", CmsSlotLive.Show, :show
+    live "/cms_slots/:id/edit", CmsSlotLive.Form, :edit
+
     live "/cms_images", CmsImageLive.Index, :index
     live "/cms_images/new", CmsImageLive.Form, :new
     live "/cms_images/:id", CmsImageLive.Show, :show
@@ -62,6 +67,11 @@ defmodule DeadSimpleCmsWeb.Router do
       live "/cms_pages/new", DeadSimpleCmsWeb.CmsPageLive.Form, :new
       live "/cms_pages/:id", DeadSimpleCmsWeb.CmsPageLive.Show, :show
       live "/cms_pages/:id/edit", DeadSimpleCmsWeb.CmsPageLive.Form, :edit
+
+      live "/cms_slots", DeadSimpleCmsWeb.CmsSlotLive.Index, :index
+      live "/cms_slots/new", DeadSimpleCmsWeb.CmsSlotLive.Form, :new
+      live "/cms_slots/:id", DeadSimpleCmsWeb.CmsSlotLive.Show, :show
+      live "/cms_slots/:id/edit", DeadSimpleCmsWeb.CmsSlotLive.Form, :edit
 
       live "/cms_images", DeadSimpleCmsWeb.CmsImageLive.Index, :index
       live "/cms_images/new", DeadSimpleCmsWeb.CmsImageLive.Form, :new

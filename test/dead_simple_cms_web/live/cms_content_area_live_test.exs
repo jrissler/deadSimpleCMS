@@ -26,12 +26,12 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLiveTest do
       assert render(form_live) =~ "New Cms content area"
 
       assert form_live
-             |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: nil, cms_page_id: data.cms_page.id))
+             |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: nil, cms_page_id: data.cms_page.id, cms_slot_id: data.cms_slot.id))
              |> render_change() =~ "can&#39;t be blank"
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "some new name", cms_page_id: data.cms_page.id))
+               |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "some new name", cms_page_id: data.cms_page.id, cms_slot_id: data.cms_slot.id))
                |> render_submit()
                |> follow_redirect(conn, ~p"/cms_content_areas")
 
@@ -52,12 +52,12 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLiveTest do
       assert render(form_live) =~ "Edit Cms content area"
 
       assert form_live
-             |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id))
+             |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id, cms_slot_id: data.cms_slot.id))
              |> render_change() =~ "can&#39;t be blank"
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "some updated name", position: 43, visible: false, title: "some updated title", subtitle: "some updated subtitle", body_md: "some updated body_md", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id))
+               |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "some updated name", position: 43, visible: false, title: "some updated title", subtitle: "some updated subtitle", body_md: "some updated body_md", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id, cms_slot_id: data.cms_slot.id))
                |> render_submit()
                |> follow_redirect(conn, ~p"/cms_content_areas")
 
@@ -94,7 +94,7 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLiveTest do
       assert render(form_live) =~ "Edit Cms content area"
 
       assert form_live
-             |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id))
+             |> form("#cms_content_area-form", cms_content_area: params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id, cms_slot_id: data.cms_slot.id))
              |> render_change() =~ "can&#39;t be blank"
 
       assert {:ok, show_live, _html} =

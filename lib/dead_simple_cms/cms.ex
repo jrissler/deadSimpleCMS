@@ -8,6 +8,7 @@ defmodule DeadSimpleCms.Cms do
   alias DeadSimpleCms.Cms.CmsPage
   alias DeadSimpleCms.Cms.CmsImage
   alias DeadSimpleCms.Cms.CmsContentArea
+  alias DeadSimpleCms.Cms.CmsSlot
 
   defp repo, do: DeadSimpleCms.repo!()
 
@@ -313,5 +314,99 @@ defmodule DeadSimpleCms.Cms do
   """
   def change_cms_content_area(%CmsContentArea{} = cms_content_area, attrs \\ %{}) do
     CmsContentArea.changeset(cms_content_area, attrs)
+  end
+
+  @doc """
+  Returns the list of cms_slots.
+
+  ## Examples
+
+      iex> list_cms_slots()
+      [%CmsSlot{}, ...]
+
+  """
+  def list_cms_slots do
+    repo().all(CmsSlot)
+  end
+
+  @doc """
+  Gets a single cms_slot.
+
+  Raises `Ecto.NoResultsError` if the Cms slot does not exist.
+
+  ## Examples
+
+      iex> get_cms_slot!(123)
+      %CmsSlot{}
+
+      iex> get_cms_slot!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_cms_slot!(id), do: repo().get!(CmsSlot, id)
+
+  @doc """
+  Creates a cms_slot.
+
+  ## Examples
+
+      iex> create_cms_slot(%{field: value})
+      {:ok, %CmsSlot{}}
+
+      iex> create_cms_slot(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_cms_slot(attrs) do
+    %CmsSlot{}
+    |> CmsSlot.changeset(attrs)
+    |> repo().insert()
+  end
+
+  @doc """
+  Updates a cms_slot.
+
+  ## Examples
+
+      iex> update_cms_slot(cms_slot, %{field: new_value})
+      {:ok, %CmsSlot{}}
+
+      iex> update_cms_slot(cms_slot, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_cms_slot(%CmsSlot{} = cms_slot, attrs) do
+    cms_slot
+    |> CmsSlot.changeset(attrs)
+    |> repo().update()
+  end
+
+  @doc """
+  Deletes a cms_slot.
+
+  ## Examples
+
+      iex> delete_cms_slot(cms_slot)
+      {:ok, %CmsSlot{}}
+
+      iex> delete_cms_slot(cms_slot)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_cms_slot(%CmsSlot{} = cms_slot) do
+    repo().delete(cms_slot)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking cms_slot changes.
+
+  ## Examples
+
+      iex> change_cms_slot(cms_slot)
+      %Ecto.Changeset{data: %CmsSlot{}}
+
+  """
+  def change_cms_slot(%CmsSlot{} = cms_slot, attrs \\ %{}) do
+    CmsSlot.changeset(cms_slot, attrs)
   end
 end

@@ -12,13 +12,15 @@ defmodule DeadSimpleCms.Factory do
   def base_setup do
     cms_image = insert(:cms_image)
     cms_page = insert(:cms_page)
-    cms_content_area = insert(:cms_content_area, cms_page_id: cms_page.id, cms_image_id: cms_image.id)
+    cms_slot = insert(:cms_slot)
+    cms_content_area = insert(:cms_content_area, cms_page_id: cms_page.id, cms_image_id: cms_image.id, cms_slot_id: cms_slot.id)
     cms_bio = insert(:cms_bio, cms_image_id: cms_image.id)
     cms_testimonial = insert(:cms_testimonial)
 
     %{
       cms_image: cms_image,
       cms_page: cms_page,
+      cms_slot: cms_slot,
       cms_content_area: cms_content_area,
       cms_bio: cms_bio,
       cms_testimonial: cms_testimonial
@@ -61,6 +63,15 @@ defmodule DeadSimpleCms.Factory do
 
     # cms_page_id
     # cms_image_id
+    # cms_slot_id
+  end
+
+  def cms_slot_factory do
+    %DeadSimpleCms.Cms.CmsSlot{
+      key: sequence(:cms_slot_key, &"slot_key_#{&1}"),
+      name: sequence(:cms_slot_name, &"slot_name_#{&1}"),
+      description: "Optional subtitle"
+    }
   end
 
   def cms_bio_factory do

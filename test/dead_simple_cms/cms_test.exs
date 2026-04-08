@@ -7,6 +7,7 @@ defmodule DeadSimpleCms.CmsTest do
   alias DeadSimpleCms.Cms.CmsContentArea
   alias DeadSimpleCms.Cms.CmsImage
   alias DeadSimpleCms.Cms.CmsPage
+  alias DeadSimpleCms.Cms.CmsSlot
 
   setup :base_data
 
@@ -128,7 +129,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "create_cms_content_area/1 with valid data creates a cms_content_area", %{data: data} do
-      attrs = params_for(:cms_content_area, name: "some name", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id)
+      attrs = params_for(:cms_content_area, name: "some name", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id, cms_slot_id: data.cms_slot.id)
 
       assert {:ok, %CmsContentArea{} = cms_content_area} = Cms.create_cms_content_area(attrs)
 
@@ -141,7 +142,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "create_cms_content_area/1 with invalid data returns error changeset", %{data: data} do
-      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_content_area(params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id))
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_content_area(params_for(:cms_content_area, name: "", cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id, cms_slot_id: data.cms_slot.id))
       assert errors == [{:name, {"can't be blank", [validation: :required]}}]
     end
 
@@ -173,6 +174,59 @@ defmodule DeadSimpleCms.CmsTest do
 
     test "change_cms_content_area/1 returns a cms_content_area changeset", %{data: data} do
       assert %Ecto.Changeset{} = Cms.change_cms_content_area(data.cms_content_area)
+    end
+  end
+
+  describe "cms_slots" do
+    test "list_cms_slots/0 returns all cms_slots", %{data: data} do
+      assert Cms.list_cms_slots() == [data.cms_slot]
+    end
+
+    test "get_cms_slot!/1 returns the cms_slot with given id", %{data: data} do
+      assert Cms.get_cms_slot!(data.cms_slot.id) == data.cms_slot
+    end
+
+    test "create_cms_slot/1 with valid data creates a cms_slot" do
+      attrs = params_for(:cms_slot, key: "hero_intro", name: "Hero Intro", description: "Primary hero content area")
+
+      assert {:ok, %CmsSlot{} = cms_slot} = Cms.create_cms_slot(attrs)
+      assert cms_slot.key == "hero_intro"
+      assert cms_slot.name == "Hero Intro"
+      assert cms_slot.description == "Primary hero content area"
+    end
+
+    test "create_cms_slot/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_slot(params_for(:cms_slot, key: "", name: ""))
+      assert errors == [key: {"can't be blank", [validation: :required]}, name: {"can't be blank", [validation: :required]}]
+    end
+
+    test "create_cms_slot/1 with non-unique key returns error changeset", %{data: data} do
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_slot(params_for(:cms_slot, key: data.cms_slot.key))
+      assert errors == [key: {"has already been taken", [{:constraint, :unique}, {:constraint_name, "cms_slots_key_index"}]}]
+    end
+
+    test "update_cms_slot/2 with valid data updates the cms_slot", %{data: data} do
+      attrs = params_for(:cms_slot, key: "primary_cta", name: "Primary CTA", description: "Updated description")
+
+      assert {:ok, %CmsSlot{} = cms_slot} = Cms.update_cms_slot(data.cms_slot, attrs)
+      assert cms_slot.key == "primary_cta"
+      assert cms_slot.name == "Primary CTA"
+      assert cms_slot.description == "Updated description"
+    end
+
+    test "update_cms_slot/2 with invalid data returns error changeset", %{data: data} do
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_slot(data.cms_slot, %{key: "", name: ""})
+      assert errors == [key: {"can't be blank", [validation: :required]}, name: {"can't be blank", [validation: :required]}]
+      assert data.cms_slot == Cms.get_cms_slot!(data.cms_slot.id)
+    end
+
+    test "delete_cms_slot/1 deletes the cms_slot", %{data: data} do
+      assert {:ok, %CmsSlot{}} = Cms.delete_cms_slot(data.cms_slot)
+      assert_raise Ecto.NoResultsError, fn -> Cms.get_cms_slot!(data.cms_slot.id) end
+    end
+
+    test "change_cms_slot/1 returns a cms_slot changeset", %{data: data} do
+      assert %Ecto.Changeset{} = Cms.change_cms_slot(data.cms_slot)
     end
   end
 end
