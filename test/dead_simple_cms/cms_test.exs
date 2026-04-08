@@ -21,7 +21,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_published_page_by_slug/1 returns the cms_page with given slug", %{data: data} do
-      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, cms_content_areas: :cms_image)
+      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, cms_content_areas: [:cms_image, :cms_slot])
     end
 
     test "create_cms_page/1 with valid data creates a cms_page" do
