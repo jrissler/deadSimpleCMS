@@ -45,6 +45,12 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                 </div>
               </div>
 
+              <%= if preview_enabled?() and function_exported?(preview_component_module(), :cms_content_slot, 1) do %>
+                <div class="mt-6 border-t pt-6">
+                  <div class="mb-3 text-sm font-semibold text-zinc-700">Preview</div>
+                  {apply(preview_component_module(), :cms_content_slot, [%{content_area: preview_area(area, @area_forms[area.id])}])}
+                </div>
+              <% end %>
               <.form for={@area_forms[area.id]} id={"content-area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area">
                 <input type="hidden" name="_id" value={area.id} />
 
@@ -191,4 +197,22 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
 
   defp return_path("index", _cms_page), do: DeadSimpleCms.path("/cms_pages")
   defp return_path("show", cms_page), do: DeadSimpleCms.path("/cms_pages/#{cms_page.id}")
+
+  defp preview_component_module do
+    Application.get_env(:dead_simple_cms, :preview_components)
+  end
+
+  defp preview_enabled? do
+    match?(module when is_atom(module), preview_component_module())
+  end
+
+  defp preview_area(area, nil), do: area
+
+  defp preview_area(area, form) do
+    %{area | visible: input_value(form, :visible, area.visible), title: input_value(form, :title, area.title), subtitle: input_value(form, :subtitle, area.subtitle), body_md: input_value(form, :body_md, area.body_md)}
+  end
+
+  defp input_value(form, field, fallback) do
+    Phoenix.HTML.Form.input_value(form, field) || fallback
+  end
 end

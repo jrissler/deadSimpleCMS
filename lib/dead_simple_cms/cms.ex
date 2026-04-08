@@ -40,7 +40,7 @@ defmodule DeadSimpleCms.Cms do
 
   """
   def get_cms_page!(id) do
-    repo().get!(CmsPage, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position], preload: [:cms_image]))
+    repo().get!(CmsPage, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position], preload: [:cms_image, :cms_slot]))
   end
 
   @doc """

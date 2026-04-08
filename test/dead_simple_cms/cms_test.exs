@@ -17,7 +17,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_cms_page!/1 returns the cms_page with given id", %{data: data} do
-      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, cms_content_areas: :cms_image)
+      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, cms_content_areas: [:cms_image, :cms_slot])
     end
 
     test "get_published_page_by_slug/1 returns the cms_page with given slug", %{data: data} do
@@ -50,7 +50,7 @@ defmodule DeadSimpleCms.CmsTest do
     test "update_cms_page/2 with invalid data returns error changeset", %{data: data} do
       assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_page(data.cms_page, params_for(:cms_page, title: ""))
       assert errors == [{:title, {"can't be blank", [validation: :required]}}]
-      assert Repo.preload(data.cms_page, cms_content_areas: :cms_image) == Cms.get_cms_page!(data.cms_page.id)
+      assert Repo.preload(data.cms_page, cms_content_areas: [:cms_image, :cms_slot]) == Cms.get_cms_page!(data.cms_page.id)
     end
 
     test "delete_cms_page/1 deletes the cms_page", %{data: data} do
