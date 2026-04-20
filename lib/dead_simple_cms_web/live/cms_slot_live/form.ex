@@ -7,26 +7,41 @@ defmodule DeadSimpleCmsWeb.CmsSlotLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@page_title}
-      <:subtitle>Use this form to manage CMS Slots.</:subtitle>
-    </.header>
-
-    <.form for={@form} id="cms_slot-form" phx-change="validate" phx-submit="save">
-      <.input field={@form[:key]} type="text" label="Key" />
-      <.input field={@form[:name]} type="text" label="Name" />
-      <.input field={@form[:description]} type="textarea" label="Description" />
-
-      <footer class="flex justify-end gap-3 pt-6">
-        <.link navigate={return_path(@return_to, @cms_slot)} class="btn btn-primary btn-soft">
-          Cancel
+    <.content_header main_title={@page_title} sub_title="Admin" description="CMS slots define named render targets that content areas can be assigned to.">
+      <:action>
+        <.link navigate={DeadSimpleCms.path("/cms_slots")} class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-list-bullet" class="-ml-0.5 mr-1 h-5 w-5" /> All CMS Slots
         </.link>
+      </:action>
+    </.content_header>
 
-        <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-          Save Cms slot
-        </.button>
-      </footer>
-    </.form>
+    <main class="pt-2 pb-16 mt-0">
+      <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-0">
+          <section aria-labelledby="cms-slot-form-heading">
+            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+              <.form for={@form} id="cms_slot-form" phx-change="validate" phx-submit="save" class="space-y-6 p-6 sm:p-8">
+                <div class="grid grid-cols-1 gap-6">
+                  <.input field={@form[:key]} type="text" label="Key" />
+                  <.input field={@form[:name]} type="text" label="Name" />
+                  <.input field={@form[:description]} type="textarea" label="Description" />
+                </div>
+
+                <footer class="flex justify-end gap-3 pt-6 border-t border-zinc-200">
+                  <.link navigate={return_path(@return_to, @cms_slot)} class="btn btn-primary btn-soft">
+                    Cancel
+                  </.link>
+
+                  <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+                    Save Cms slot
+                  </.button>
+                </footer>
+              </.form>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     """
   end
 

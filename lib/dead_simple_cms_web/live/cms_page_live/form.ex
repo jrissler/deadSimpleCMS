@@ -7,95 +7,110 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@page_title}
-      <:subtitle>Use this form to manage CMS Pages.</:subtitle>
-    </.header>
-
-    <.form for={@form} id="cms_page-form" phx-change="validate" phx-submit="save">
-      <.input field={@form[:slug]} type="text" label="Slug" />
-      <.input field={@form[:title]} type="text" label="Title" />
-      <.input field={@form[:published]} type="checkbox" label="Published" />
-      <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
-      <.input field={@form[:cms_page_template_id]} type="select" label="Page Template (Optional)" options={[{"Select a template", nil}] ++ Enum.map(@cms_page_templates, &{&1.name, &1.id})} />
-
-      <footer class="flex justify-end gap-3 pt-6">
-        <.link navigate={return_path(@return_to, @cms_page)} class="btn btn-primary btn-soft">
-          Cancel
+    <.content_header main_title={@page_title} sub_title="Admin" description="Edit CMS Page Settings">
+      <:action>
+        <.link patch={DeadSimpleCms.path("/cms_pages")} class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-pencil" class="-ml-0.5 mr-1 h-5 w-5" /> All CMS Pages
         </.link>
+      </:action>
+    </.content_header>
 
-        <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-          Save Cms page
-        </.button>
-      </footer>
-    </.form>
-
-    <%= if @live_action == :edit do %>
-      <div class="mt-10">
-        <.header>
-          Content Areas
-          <:subtitle>Edit slot content here. Layout and rendering are controlled by the host app.</:subtitle>
-        </.header>
-
-        <div class="space-y-6">
-          <%= for area <- @areas do %>
-            <div class="rounded-lg border p-4">
-              <div class="mb-3 flex items-center justify-between">
-                <div class="min-w-0">
-                  <div class="font-semibold truncate">
-                    {area.name || "(unnamed)"}
-                  </div>
-                  <div class="text-sm text-zinc-600">
-                    position: {area.position} • visible: {area.visible}
-                    {if area.cms_image_id, do: " • image", else: ""}
-                  </div>
-                </div>
-              </div>
-
-              <%= if preview_enabled?() and function_exported?(preview_component_module(), :cms_content_slot, 1) do %>
-                <div class="mt-6 border-t pt-6">
-                  <div class="mb-3 text-sm font-semibold text-zinc-700">Preview</div>
-                  {apply(preview_component_module(), :cms_content_slot, [%{content_area: preview_area(area, @area_forms[area.id])}])}
-                </div>
-              <% end %>
-              <.form for={@area_forms[area.id]} id={"content-area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area">
-                <input type="hidden" name="_id" value={area.id} />
-
-                <div class="grid grid-cols-1 gap-4">
-                  <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
-                  <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
-                  <.input field={@area_forms[area.id][:subtitle]} id={"content-area-#{area.id}-subtitle"} type="text" label="Subtitle" />
-
-                  <div class="space-y-2 fieldset">
-                    <label for={"content-area-#{area.id}-body-md-input"} class="label mb-1">
-                      Body (Markdown)
-                    </label>
-
-                    <textarea id={"content-area-#{area.id}-body-md-input"} name={@area_forms[area.id][:body_md].name} class="hidden"><%= Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || "" %></textarea>
-
-                    <div id={"content-area-#{area.id}-body-md-editor-wrapper"} phx-update="ignore">
-                      <div id={"content-area-#{area.id}-body-md-editor"} phx-hook="EasyMDE" data-target-input-id={"content-area-#{area.id}-body-md-input"} data-initial-value={Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || ""}></div>
-                    </div>
-                  </div>
+    <main class="pt-2 pb-16 mt-0">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-0 space-y-10">
+          <section aria-labelledby="cms-page-form-heading">
+            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+              <.form for={@form} id="cms_page-form" phx-change="validate" phx-submit="save" class="space-y-6 p-6 sm:p-8">
+                <div class="grid grid-cols-1 gap-6">
+                  <.input field={@form[:slug]} type="text" label="Slug" />
+                  <.input field={@form[:title]} type="text" label="Title" />
+                  <.input field={@form[:published]} type="checkbox" label="Published" />
+                  <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
+                  <.input field={@form[:cms_page_template_id]} type="select" label="Page Template (Optional)" options={[{"Select a template", nil}] ++ Enum.map(@cms_page_templates, &{&1.name, &1.id})} />
                 </div>
 
-                <div class="mt-4 flex gap-2">
+                <footer class="flex justify-end gap-3 pt-6 border-t border-zinc-200">
+                  <.link navigate={return_path(@return_to, @cms_page)} class="btn btn-primary btn-soft">
+                    Cancel
+                  </.link>
+
                   <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-                    Save Area
+                    Save Cms page
                   </.button>
-                </div>
+                </footer>
               </.form>
             </div>
-          <% end %>
+          </section>
 
-          <%= if Enum.empty?(@areas) do %>
-            <div class="rounded-lg border border-dashed p-6 text-sm text-zinc-600">
-              No content areas exist for this page yet.
-            </div>
+          <%= if @live_action == :edit do %>
+            <section aria-labelledby="cms-page-content-areas-heading">
+              <.content_header main_title="Content Areas" sub_title="Page Content" description="Edit content areas on your page." />
+
+              <div class="space-y-6 mt-6">
+                <%= for area <- @areas do %>
+                  <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+                    <div class="border-b border-zinc-200 px-6 py-4">
+                      <div class="min-w-0">
+                        <div class="truncate text-base font-semibold text-zinc-900">
+                          {area.name || "(unnamed)"}
+                        </div>
+                        <div class="mt-1 text-sm text-zinc-600">
+                          position: {area.position} • visible: {area.visible}
+                          {if area.cms_image_id, do: " • image", else: ""}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="p-6 sm:p-8">
+                      <%= if preview_enabled?() and function_exported?(preview_component_module(), :cms_content_slot, 1) do %>
+                        <div class="mb-6 border-b border-zinc-200 pb-6">
+                          <div class="mb-3 text-sm font-semibold text-zinc-700">Preview</div>
+                          {apply(preview_component_module(), :cms_content_slot, [%{content_area: preview_area(area, @area_forms[area.id])}])}
+                        </div>
+                      <% end %>
+
+                      <.form for={@area_forms[area.id]} id={"content-area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area" class="space-y-6">
+                        <input type="hidden" name="_id" value={area.id} />
+
+                        <div class="grid grid-cols-1 gap-4">
+                          <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
+                          <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
+                          <.input field={@area_forms[area.id][:subtitle]} id={"content-area-#{area.id}-subtitle"} type="text" label="Subtitle" />
+
+                          <div class="space-y-2 fieldset">
+                            <label for={"content-area-#{area.id}-body-md-input"} class="label mb-1">
+                              Body (Markdown)
+                            </label>
+
+                            <textarea id={"content-area-#{area.id}-body-md-input"} name={@area_forms[area.id][:body_md].name} class="hidden"><%= Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || "" %></textarea>
+
+                            <div id={"content-area-#{area.id}-body-md-editor-wrapper"} phx-update="ignore">
+                              <div id={"content-area-#{area.id}-body-md-editor"} phx-hook="EasyMDE" data-target-input-id={"content-area-#{area.id}-body-md-input"} data-initial-value={Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || ""}></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="mt-4 flex gap-2">
+                          <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+                            Save Area
+                          </.button>
+                        </div>
+                      </.form>
+                    </div>
+                  </div>
+                <% end %>
+
+                <%= if Enum.empty?(@areas) do %>
+                  <div class="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600 shadow-sm">
+                    No content areas exist for this page yet.
+                  </div>
+                <% end %>
+              </div>
+            </section>
           <% end %>
         </div>
       </div>
-    <% end %>
+    </main>
     """
   end
 

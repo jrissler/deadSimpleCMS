@@ -17,96 +17,104 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Form do
       </:action>
     </.content_header>
 
-    <div class="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
-      <.form for={@form} id="cms_bio-form" phx-change="validate" phx-submit="save" class="p-6 sm:p-8">
-        <div class="space-y-8">
-          <div class="grid grid-cols-1 gap-6">
-            <.input field={@form[:cms_image_id]} type="hidden" />
-            <.input field={@form[:name]} type="text" label="Name" />
-            <.input field={@form[:job_title]} type="text" label="Job Title" />
-            <.input field={@form[:tag_line]} type="text" label="Tag Line" />
-            <.input field={@form[:description]} type="textarea" label="Description" />
-            <.input field={@form[:phone_number]} type="text" label="Phone Number" />
-            <.input field={@form[:email]} type="text" label="Email" />
-            <.input field={@form[:facebook]} type="text" label="Facebook" />
-            <.input field={@form[:instagram]} type="text" label="Instagram" />
-            <.input field={@form[:tik_tok]} type="text" label="Tik Tok" />
-            <.input field={@form[:linked_in]} type="text" label="Linked In" />
-            <.input field={@form[:slug]} type="text" label="Slug" />
-            <div class="pt-1">
-              <.input field={@form[:visible]} type="checkbox" label="Visible" />
-            </div>
-          </div>
-
-          <div class="border-t border-gray-200 pt-8">
-            <div class="flex items-start justify-between gap-6">
-              <div>
-                <h2 class="text-base font-semibold tracking-tight text-gray-900">Image</h2>
-                <p class="mt-1 text-sm text-gray-600">Optional.</p>
-              </div>
-            </div>
-
-            <%= if @current_image do %>
-              <div class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div class="flex items-start gap-4">
-                  <img src={@current_image.url} alt={@current_image.alt || ""} class="h-28 w-28 object-cover rounded-lg ring-1 ring-gray-300" />
-                  <div class="flex-1 space-y-1">
-                    <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Filename:</span> {@current_image.filename}</p>
-                    <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Content-Type:</span> {@current_image.content_type}</p>
-                    <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Size:</span> {@current_image.size}</p>
-                    <p :if={@current_image.caption} class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Caption:</span> {@current_image.caption}</p>
+    <main class="pt-2 pb-16 mt-0">
+      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-0 space-y-10">
+          <section aria-labelledby="cms-bio-form-heading">
+            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+              <.form for={@form} id="cms_bio-form" phx-change="validate" phx-submit="save" class="p-6 sm:p-8">
+                <div class="space-y-8">
+                  <div class="grid grid-cols-1 gap-6">
+                    <.input field={@form[:cms_image_id]} type="hidden" />
+                    <.input field={@form[:name]} type="text" label="Name" />
+                    <.input field={@form[:job_title]} type="text" label="Job Title" />
+                    <.input field={@form[:tag_line]} type="text" label="Tag Line" />
+                    <.input field={@form[:description]} type="textarea" label="Description" />
+                    <.input field={@form[:phone_number]} type="text" label="Phone Number" />
+                    <.input field={@form[:email]} type="text" label="Email" />
+                    <.input field={@form[:facebook]} type="text" label="Facebook" />
+                    <.input field={@form[:instagram]} type="text" label="Instagram" />
+                    <.input field={@form[:tik_tok]} type="text" label="Tik Tok" />
+                    <.input field={@form[:linked_in]} type="text" label="Linked In" />
+                    <.input field={@form[:slug]} type="text" label="Slug" />
+                    <div class="pt-1">
+                      <.input field={@form[:visible]} type="checkbox" label="Visible" />
+                    </div>
                   </div>
+
+                  <div class="border-t border-gray-200 pt-8">
+                    <div class="flex items-start justify-between gap-6">
+                      <div>
+                        <h2 class="text-base font-semibold tracking-tight text-gray-900">Image</h2>
+                        <p class="mt-1 text-sm text-gray-600">Optional.</p>
+                      </div>
+                    </div>
+
+                    <%= if @current_image do %>
+                      <div class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                        <div class="flex items-start gap-4">
+                          <img src={@current_image.url} alt={@current_image.alt || ""} class="h-28 w-28 object-cover rounded-lg ring-1 ring-gray-300" />
+                          <div class="flex-1 space-y-1">
+                            <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Filename:</span> {@current_image.filename}</p>
+                            <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Content-Type:</span> {@current_image.content_type}</p>
+                            <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Size:</span> {@current_image.size}</p>
+                            <p :if={@current_image.caption} class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Caption:</span> {@current_image.caption}</p>
+                          </div>
+                        </div>
+                      </div>
+                    <% else %>
+                      <p class="mt-3 text-sm text-gray-600 italic">No image assigned to this bio.</p>
+                    <% end %>
+
+                    <div class="mt-6 flex flex-col items-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
+                      <div class="mb-4 flex w-full items-center justify-center">
+                        <label for={@uploads.image.ref} class="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-indigo-600">
+                          <.icon name="hero-arrow-up-tray" class="h-5 w-5 text-gray-500" /> Choose image
+                        </label>
+
+                        <.live_file_input upload={@uploads.image} class="sr-only" />
+                      </div>
+
+                      <section class="phx-drop-target mb-6 flex h-44 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 p-4 transition duration-200 hover:bg-gray-200" phx-drop-target={@uploads.image.ref}>
+                        <p class="text-center text-gray-500">Drop your file here or click Choose image.</p>
+                        <p class="mt-1 text-xs text-gray-400">1 image per bio (for now).</p>
+                      </section>
+
+                      <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+                        <article :for={entry <- @uploads.image.entries} class="w-full rounded-lg bg-white p-4 shadow-sm">
+                          <figure class="flex flex-col items-center">
+                            <.live_img_preview entry={entry} class="mb-2 max-h-48 object-contain" />
+                            <figcaption class="text-sm text-gray-600">{entry.client_name}</figcaption>
+                          </figure>
+
+                          <progress value={entry.progress} max="100" class="mb-2 h-2 w-full rounded-lg bg-blue-100">{entry.progress}%</progress>
+
+                          <button type="button" phx-click="cancel-upload" phx-value-ref={entry.ref} class="text-lg font-bold text-red-500 transition duration-200 hover:text-red-700" aria-label="cancel">&times;</button>
+
+                          <p :for={err <- upload_errors(@uploads.image, entry)} class="mt-2 text-sm text-red-500">{error_to_string(err)}</p>
+                        </article>
+                      </div>
+
+                      <p :for={err <- upload_errors(@uploads.image)} class="mt-2 text-sm text-red-500">{error_to_string(err)}</p>
+                    </div>
+                  </div>
+
+                  <footer class="flex justify-end gap-3 pt-6">
+                    <.link navigate={return_path(@return_to, @cms_bio)} class="btn btn-primary btn-soft">
+                      Cancel
+                    </.link>
+
+                    <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+                      Save Cms bio
+                    </.button>
+                  </footer>
                 </div>
-              </div>
-            <% else %>
-              <p class="mt-3 text-sm text-gray-600 italic">No image assigned to this bio.</p>
-            <% end %>
-
-            <div class="mt-6 flex flex-col items-center p-6 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
-              <div class="mb-4 w-full flex items-center justify-center">
-                <label for={@uploads.image.ref} class="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 shadow-sm hover:bg-gray-50 cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-indigo-600">
-                  <.icon name="hero-arrow-up-tray" class="h-5 w-5 text-gray-500" /> Choose image
-                </label>
-
-                <.live_file_input upload={@uploads.image} class="sr-only" />
-              </div>
-
-              <section class="phx-drop-target w-full h-44 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-100 hover:bg-gray-200 transition duration-200 mb-6 p-4" phx-drop-target={@uploads.image.ref}>
-                <p class="text-gray-500 text-center">Drop your file here or click Choose image.</p>
-                <p class="text-gray-400 text-xs mt-1">1 image per bio (for now).</p>
-              </section>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                <article :for={entry <- @uploads.image.entries} class="w-full p-4 bg-white rounded-lg shadow-sm">
-                  <figure class="flex flex-col items-center">
-                    <.live_img_preview entry={entry} class="mb-2 max-h-48 object-contain" />
-                    <figcaption class="text-sm text-gray-600">{entry.client_name}</figcaption>
-                  </figure>
-
-                  <progress value={entry.progress} max="100" class="w-full h-2 bg-blue-100 rounded-lg mb-2">{entry.progress}%</progress>
-
-                  <button type="button" phx-click="cancel-upload" phx-value-ref={entry.ref} class="text-red-500 font-bold text-lg hover:text-red-700 transition duration-200" aria-label="cancel">&times;</button>
-
-                  <p :for={err <- upload_errors(@uploads.image, entry)} class="mt-2 text-sm text-red-500">{error_to_string(err)}</p>
-                </article>
-              </div>
-
-              <p :for={err <- upload_errors(@uploads.image)} class="mt-2 text-sm text-red-500">{error_to_string(err)}</p>
+              </.form>
             </div>
-          </div>
-
-          <footer class="flex justify-end gap-3 pt-6">
-            <.link navigate={return_path(@return_to, @cms_bio)} class="btn btn-primary btn-soft">
-              Cancel
-            </.link>
-
-            <button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-              Save Cms bio
-            </button>
-          </footer>
+          </section>
         </div>
-      </.form>
-    </div>
+      </div>
+    </main>
     """
   end
 

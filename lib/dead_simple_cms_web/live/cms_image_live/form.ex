@@ -7,28 +7,43 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <.header>
-      {@page_title}
-      <:subtitle>Use this form to manage cms_image records in your database.</:subtitle>
-    </.header>
-
-    <.form for={@form} id="cms_image-form" phx-change="validate" phx-submit="save">
-      <.input field={@form[:alt]} type="text" label="Alt" />
-      <.input field={@form[:url]} type="text" label="Url" />
-      <.input field={@form[:filename]} type="text" label="Filename" />
-      <.input field={@form[:content_type]} type="text" label="Filename" />
-      <.input field={@form[:size]} type="text" label="Size" />
-
-      <footer class="flex justify-end gap-3 pt-6">
-        <.link navigate={return_path(@return_to, @cms_image)} class="btn btn-primary btn-soft">
-          Cancel
+    <.content_header main_title={@page_title} sub_title="Admin" description="Images are reusable media records that can be assigned to CMS content.">
+      <:action>
+        <.link navigate={DeadSimpleCms.path("/cms_images")} class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          <.icon name="hero-list-bullet" class="-ml-0.5 mr-1 h-5 w-5" /> All CMS Images
         </.link>
+      </:action>
+    </.content_header>
 
-        <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-          Save Cms image
-        </.button>
-      </footer>
-    </.form>
+    <main class="pt-2 pb-16 mt-0">
+      <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="px-4 sm:px-0">
+          <section aria-labelledby="cms-image-form-heading">
+            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+              <.form for={@form} id="cms_image-form" phx-change="validate" phx-submit="save" class="space-y-6 p-6 sm:p-8">
+                <div class="grid grid-cols-1 gap-6">
+                  <.input field={@form[:alt]} type="text" label="Alt" />
+                  <.input field={@form[:url]} type="text" label="Url" />
+                  <.input field={@form[:filename]} type="text" label="Filename" />
+                  <.input field={@form[:content_type]} type="text" label="Content Type" />
+                  <.input field={@form[:size]} type="text" label="Size" />
+                </div>
+
+                <footer class="flex justify-end gap-3 pt-6 border-t border-zinc-200">
+                  <.link navigate={return_path(@return_to, @cms_image)} class="btn btn-primary btn-soft">
+                    Cancel
+                  </.link>
+
+                  <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+                    Save Cms image
+                  </.button>
+                </footer>
+              </.form>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
     """
   end
 
@@ -65,7 +80,6 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Form do
         {:noreply, socket |> put_flash(:info, "Cms image updated successfully") |> push_navigate(to: return_path(socket.assigns.return_to, cms_image))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset)
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end

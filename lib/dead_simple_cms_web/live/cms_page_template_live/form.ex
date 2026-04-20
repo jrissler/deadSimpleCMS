@@ -9,7 +9,7 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
     ~H"""
     <.content_header main_title={@page_title} sub_title="Admin" description="Page templates define the overall content structure pattern for CMS pages." />
 
-    <main class="pt-2 pb-16 mt-0 bg-white">
+    <main class="pt-2 pb-16 mt-0">
       <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
         <div class="px-4 sm:px-0">
           <section aria-labelledby="cms-page-template-form-heading">

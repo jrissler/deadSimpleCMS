@@ -45,10 +45,25 @@ defmodule DeadSimpleCmsWeb.Layouts do
       <div class="flex-none">
         <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
-            <a href="#" class="btn btn-ghost">Something DSCMS</a>
+            <a href="/cms_pages" class="btn btn-ghost">Pages</a>
           </li>
           <li>
-            <a href="#" class="btn btn-ghost">Something DSCMS</a>
+            <a href="/cms_page_templates" class="btn btn-ghost">Page Templates</a>
+          </li>
+          <li>
+            <a href="/cms_content_areas" class="btn btn-ghost">Content Areas</a>
+          </li>
+          <li>
+            <a href="/cms_images" class="btn btn-ghost">Images</a>
+          </li>
+          <li>
+            <a href="/cms_slots" class="btn btn-ghost">Slots</a>
+          </li>
+          <li>
+            <a href="/cms_bios" class="btn btn-ghost">Bios</a>
+          </li>
+          <li>
+            <a href="/cms_testimonials" class="btn btn-ghost">Testimonials</a>
           </li>
         </ul>
       </div>

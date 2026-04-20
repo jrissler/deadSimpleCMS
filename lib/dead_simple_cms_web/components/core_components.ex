@@ -505,9 +505,9 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
       end
 
     ~H"""
-    <section aria-labelledby="overview-title" class="mt-2">
+    <section class="mt-2">
       <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <h2 class="sr-only" id="overview-title">
+        <h2 class="sr-only">
           {@main_title}
           <span :if={@sub_title && @sub_title != ""}>{@sub_title}</span>
         </h2>
