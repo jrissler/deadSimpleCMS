@@ -1,0 +1,22 @@
+defmodule <%= @app_module %>.Repo.Migrations.CreateCmsPageTemplates do
+  use Ecto.Migration
+
+  def change do
+    create table(:cms_page_templates, primary_key: false) do
+      add :id, :binary_id, primary_key: true
+      add :key, :string
+      add :name, :string
+      add :description, :text
+
+      timestamps(type: :utc_datetime)
+    end
+
+    create unique_index(:cms_page_templates, [:key])
+
+    alter table(:cms_pages) do
+      add :cms_page_template_id, references(:cms_page_templates, type: :binary_id, on_delete: :nilify_all)
+    end
+
+    create index(:cms_pages, [:cms_page_template_id])
+  end
+end

@@ -7,6 +7,7 @@ defmodule DeadSimpleCms.CmsTest do
   alias DeadSimpleCms.Cms.CmsContentArea
   alias DeadSimpleCms.Cms.CmsImage
   alias DeadSimpleCms.Cms.CmsPage
+  alias DeadSimpleCms.Cms.CmsPageTemplate
   alias DeadSimpleCms.Cms.CmsSlot
 
   setup :base_data
@@ -227,6 +228,59 @@ defmodule DeadSimpleCms.CmsTest do
 
     test "change_cms_slot/1 returns a cms_slot changeset", %{data: data} do
       assert %Ecto.Changeset{} = Cms.change_cms_slot(data.cms_slot)
+    end
+  end
+
+  describe "cms_page_templates" do
+    test "list_cms_page_templates/0 returns all cms_page_templates", %{data: data} do
+      assert Cms.list_cms_page_templates() == [data.cms_page_template]
+    end
+
+    test "get_cms_page_template!/1 returns the cms_page_template with given id", %{data: data} do
+      assert Cms.get_cms_page_template!(data.cms_page_template.id) == data.cms_page_template
+    end
+
+    test "create_cms_page_template/1 with valid data creates a cms_page_template" do
+      attrs = %{key: "landing_page", name: "Landing Page", description: "Template for landing_page"}
+
+      assert {:ok, %CmsPageTemplate{} = cms_page_template} = Cms.create_cms_page_template(attrs)
+      assert cms_page_template.key == "landing_page"
+      assert cms_page_template.name == "Landing Page"
+      assert cms_page_template.description == "Template for landing_page"
+    end
+
+    test "create_cms_page_template/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_page_template(%{key: "", name: ""})
+      assert errors == [key: {"can't be blank", [validation: :required]}, name: {"can't be blank", [validation: :required]}]
+    end
+
+    test "create_cms_page_template/1 with non-unique key returns error changeset", %{data: data} do
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.create_cms_page_template(%{key: data.cms_page_template.key, name: "Another Home Page"})
+      assert errors == [key: {"has already been taken", [{:constraint, :unique}, {:constraint_name, "cms_page_templates_key_index"}]}]
+    end
+
+    test "update_cms_page_template/2 with valid data updates the cms_page_template", %{data: data} do
+      attrs = %{key: "landing_page", name: "Landing Page", description: "Updated description"}
+
+      assert {:ok, %CmsPageTemplate{} = cms_page_template} = Cms.update_cms_page_template(data.cms_page_template, attrs)
+      assert cms_page_template.key == "landing_page"
+      assert cms_page_template.name == "Landing Page"
+      assert cms_page_template.description == "Updated description"
+    end
+
+    test "update_cms_page_template/2 with invalid data returns error changeset", %{data: data} do
+      assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_page_template(data.cms_page_template, %{key: "", name: ""})
+      assert errors == [key: {"can't be blank", [validation: :required]}, name: {"can't be blank", [validation: :required]}]
+      assert data.cms_page_template == Cms.get_cms_page_template!(data.cms_page_template.id)
+    end
+
+    test "delete_cms_page_template/1 deletes the cms_page_template", %{data: data} do
+      assert {:ok, %CmsPageTemplate{}} = Cms.delete_cms_page_template(data.cms_page_template)
+      assert_raise Ecto.NoResultsError, fn -> Cms.get_cms_page_template!(data.cms_page_template.id) end
+    end
+
+    test "change_cms_page_template/1 returns a cms_page_template changeset", %{data: data} do
+      assert %Ecto.Changeset{} = Cms.change_cms_page_template(data.cms_page_template)
     end
   end
 end

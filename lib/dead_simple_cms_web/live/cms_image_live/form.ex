@@ -18,9 +18,15 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Form do
       <.input field={@form[:filename]} type="text" label="Filename" />
       <.input field={@form[:content_type]} type="text" label="Filename" />
       <.input field={@form[:size]} type="text" label="Size" />
-      <footer>
-        <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Cms image</.button>
-        <.button navigate={return_path(@return_to, @cms_image)}>Cancel</.button>
+
+      <footer class="flex justify-end gap-3 pt-6">
+        <.link navigate={return_path(@return_to, @cms_image)} class="btn btn-primary btn-soft">
+          Cancel
+        </.link>
+
+        <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+          Save Cms image
+        </.button>
       </footer>
     </.form>
     """

@@ -11,7 +11,8 @@ defmodule DeadSimpleCms.Factory do
 
   def base_setup do
     cms_image = insert(:cms_image)
-    cms_page = insert(:cms_page)
+    cms_page_template = insert(:cms_page_template)
+    cms_page = insert(:cms_page, cms_page_template_id: cms_page_template.id)
     cms_slot = insert(:cms_slot)
     cms_content_area = insert(:cms_content_area, cms_page_id: cms_page.id, cms_image_id: cms_image.id, cms_slot_id: cms_slot.id)
     cms_bio = insert(:cms_bio, cms_image_id: cms_image.id)
@@ -19,11 +20,20 @@ defmodule DeadSimpleCms.Factory do
 
     %{
       cms_image: cms_image,
+      cms_page_template: cms_page_template,
       cms_page: cms_page,
       cms_slot: cms_slot,
       cms_content_area: cms_content_area,
       cms_bio: cms_bio,
       cms_testimonial: cms_testimonial
+    }
+  end
+
+  def cms_page_template_factory do
+    %DeadSimpleCms.Cms.CmsPageTemplate{
+      key: "home_page",
+      name: "Home Page",
+      description: "Template for home_page"
     }
   end
 

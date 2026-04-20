@@ -17,9 +17,16 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
       <.input field={@form[:title]} type="text" label="Title" />
       <.input field={@form[:published]} type="checkbox" label="Published" />
       <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
-      <footer>
-        <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Cms page</.button>
-        <.button navigate={return_path(@return_to, @cms_page)}>Cancel</.button>
+      <.input field={@form[:cms_page_template_id]} type="select" label="Page Template (Optional)" options={[{"Select a template", nil}] ++ Enum.map(@cms_page_templates, &{&1.name, &1.id})} />
+
+      <footer class="flex justify-end gap-3 pt-6">
+        <.link navigate={return_path(@return_to, @cms_page)} class="btn btn-primary btn-soft">
+          Cancel
+        </.link>
+
+        <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+          Save Cms page
+        </.button>
       </footer>
     </.form>
 
@@ -73,7 +80,9 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                 </div>
 
                 <div class="mt-4 flex gap-2">
-                  <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Area</.button>
+                  <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+                    Save Area
+                  </.button>
                 </div>
               </.form>
             </div>
@@ -95,6 +104,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
+     |> assign(:cms_page_templates, Cms.list_cms_page_templates())
      |> apply_action(socket.assigns.live_action, params)}
   end
 

@@ -15,6 +15,8 @@ defmodule DeadSimpleCms.Cms.CmsPage do
     field :published, :boolean, default: false
     field :published_at, :utc_datetime_usec
 
+    belongs_to :cms_page_template, DeadSimpleCms.Cms.CmsPageTemplate
+
     has_many :cms_content_areas, DeadSimpleCms.Cms.CmsContentArea
 
     timestamps(type: :utc_datetime)
@@ -23,7 +25,7 @@ defmodule DeadSimpleCms.Cms.CmsPage do
   @doc false
   def changeset(page, attrs) do
     page
-    |> cast(attrs, [:slug, :title, :published, :published_at])
+    |> cast(attrs, [:slug, :title, :published, :published_at, :cms_page_template_id])
     |> validate_required([:slug, :title])
     |> update_change(:slug, &DeadSimpleCms.Slug.normalize/1)
     |> validate_length(:slug, min: 1, max: 120)

@@ -16,9 +16,15 @@ defmodule DeadSimpleCmsWeb.CmsSlotLive.Form do
       <.input field={@form[:key]} type="text" label="Key" />
       <.input field={@form[:name]} type="text" label="Name" />
       <.input field={@form[:description]} type="textarea" label="Description" />
-      <footer>
-        <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Cms slot</.button>
-        <.button navigate={return_path(@return_to, @cms_slot)}>Cancel</.button>
+
+      <footer class="flex justify-end gap-3 pt-6">
+        <.link navigate={return_path(@return_to, @cms_slot)} class="btn btn-primary btn-soft">
+          Cancel
+        </.link>
+
+        <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+          Save Cms slot
+        </.button>
       </footer>
     </.form>
     """

@@ -15,7 +15,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert html =~ data.cms_page.title
     end
 
-    test "saves new cms_page", %{conn: conn} do
+    test "saves new cms_page", %{conn: conn, data: data} do
       {:ok, index_live, _html} = live(conn, ~p"/cms_pages")
 
       assert {:ok, form_live, _} =
@@ -27,12 +27,12 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert render(form_live) =~ "New Cms page"
 
       assert form_live
-             |> form("#cms_page-form", cms_page: params_for(:cms_page, slug: "some slug", title: ""))
+             |> form("#cms_page-form", cms_page: params_for(:cms_page, slug: "some slug", title: "", cms_page_template_id: data.cms_page_template.id))
              |> render_change() =~ "can&#39;t be blank"
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#cms_page-form", cms_page: params_for(:cms_page, slug: "some slug", title: "some new title"))
+               |> form("#cms_page-form", cms_page: params_for(:cms_page, slug: "some slug", title: "some new title", cms_page_template_id: data.cms_page_template.id))
                |> render_submit()
                |> follow_redirect(conn, ~p"/cms_pages")
 
@@ -53,12 +53,12 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert render(form_live) =~ "Edit Cms page"
 
       assert form_live
-             |> form("#cms_page-form", cms_page: params_for(:cms_page, title: ""))
+             |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "", cms_page_template_id: data.cms_page_template.id))
              |> render_change() =~ "can&#39;t be blank"
 
       assert {:ok, index_live, _html} =
                form_live
-               |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "some updated title"))
+               |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "some updated title", cms_page_template_id: data.cms_page_template.id))
                |> render_submit()
                |> follow_redirect(conn, ~p"/cms_pages")
 
@@ -95,12 +95,12 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert render(form_live) =~ "Edit Cms page"
 
       assert form_live
-             |> form("#cms_page-form", cms_page: params_for(:cms_page, title: ""))
+             |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "", cms_page_template_id: data.cms_page_template.id))
              |> render_change() =~ "can&#39;t be blank"
 
       assert {:ok, show_live, _html} =
                form_live
-               |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "some updated title"))
+               |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "some updated title", cms_page_template_id: data.cms_page_template.id))
                |> render_submit()
                |> follow_redirect(conn, ~p"/cms_pages/#{data.cms_page}")
 

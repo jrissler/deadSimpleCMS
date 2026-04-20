@@ -96,8 +96,13 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Form do
           </div>
 
           <footer class="flex justify-end gap-3 pt-6">
-            <.button navigate={return_path(@return_to, @cms_bio)} variant="default">Cancel</.button>
-            <.button type="submit" phx-disable-with="Saving..." variant="primary">Save Cms bio</.button>
+            <.link navigate={return_path(@return_to, @cms_bio)} class="btn btn-primary btn-soft">
+              Cancel
+            </.link>
+
+            <button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
+              Save Cms bio
+            </button>
           </footer>
         </div>
       </.form>

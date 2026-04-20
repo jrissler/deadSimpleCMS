@@ -5,9 +5,10 @@ defmodule DeadSimpleCms.Cms do
 
   import Ecto.Query, warn: false
 
-  alias DeadSimpleCms.Cms.CmsPage
   alias DeadSimpleCms.Cms.CmsImage
   alias DeadSimpleCms.Cms.CmsContentArea
+  alias DeadSimpleCms.Cms.CmsPage
+  alias DeadSimpleCms.Cms.CmsPageTemplate
   alias DeadSimpleCms.Cms.CmsSlot
 
   defp repo, do: DeadSimpleCms.repo!()
@@ -408,5 +409,31 @@ defmodule DeadSimpleCms.Cms do
   """
   def change_cms_slot(%CmsSlot{} = cms_slot, attrs \\ %{}) do
     CmsSlot.changeset(cms_slot, attrs)
+  end
+
+  def list_cms_page_templates do
+    repo().all(CmsPageTemplate)
+  end
+
+  def get_cms_page_template!(id), do: repo().get!(CmsPageTemplate, id)
+
+  def create_cms_page_template(attrs) do
+    %CmsPageTemplate{}
+    |> CmsPageTemplate.changeset(attrs)
+    |> repo().insert()
+  end
+
+  def update_cms_page_template(%CmsPageTemplate{} = cms_page_template, attrs) do
+    cms_page_template
+    |> CmsPageTemplate.changeset(attrs)
+    |> repo().update()
+  end
+
+  def delete_cms_page_template(%CmsPageTemplate{} = cms_page_template) do
+    repo().delete(cms_page_template)
+  end
+
+  def change_cms_page_template(%CmsPageTemplate{} = cms_page_template, attrs \\ %{}) do
+    CmsPageTemplate.changeset(cms_page_template, attrs)
   end
 end
