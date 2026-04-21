@@ -26,7 +26,7 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
                     Cancel
                   </.link>
 
-                  <.button phx-disable-with="Saving..." variant="primary">
+                  <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
                     Save CMS Page Template
                   </.button>
                 </div>
