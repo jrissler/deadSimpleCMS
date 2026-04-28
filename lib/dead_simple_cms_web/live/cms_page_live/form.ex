@@ -69,6 +69,16 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                     </div>
 
                     <div class="p-6 sm:p-8">
+                      <%= if preview_enabled?() and function_exported?(preview_component_module(), :cms_content_slot, 1) do %>
+                        <div class="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
+                          <div class="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                            Preview
+                          </div>
+
+                          {apply(preview_component_module(), :cms_content_slot, [%{content_area: preview_area(area, @area_forms[area.id], @cms_slots)}])}
+                        </div>
+                      <% end %>
+
                       <.form for={@area_forms[area.id]} id={"content-area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area" class="space-y-6">
                         <input type="hidden" name="_id" value={area.id} />
 
@@ -222,4 +232,24 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
 
   defp return_path("index", _cms_page), do: DeadSimpleCms.path("/cms_pages")
   defp return_path("show", cms_page), do: DeadSimpleCms.path("/cms_pages/#{cms_page.id}")
+
+  defp preview_component_module do
+    Application.get_env(:dead_simple_cms, :preview_components)
+  end
+
+  defp preview_enabled? do
+    match?(module when is_atom(module), preview_component_module())
+  end
+
+  defp preview_area(area, nil, _cms_slots), do: area
+
+  defp preview_area(area, form, cms_slots) do
+    cms_slot_id = input_value(form, :cms_slot_id, area.cms_slot_id)
+
+    %{area | name: input_value(form, :name, area.name), position: input_value(form, :position, area.position), visible: input_value(form, :visible, area.visible), cms_slot_id: cms_slot_id, cms_slot: Enum.find(cms_slots, fn slot -> slot.id == cms_slot_id end) || area.cms_slot, title: input_value(form, :title, area.title), subtitle: input_value(form, :subtitle, area.subtitle), body_md: input_value(form, :body_md, area.body_md)}
+  end
+
+  defp input_value(form, field, fallback) do
+    Phoenix.HTML.Form.input_value(form, field) || fallback
+  end
 end
