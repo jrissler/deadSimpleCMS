@@ -71,10 +71,6 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                     <div class="p-6 sm:p-8">
                       <%= if preview_enabled?() and function_exported?(preview_component_module(), :cms_content_slot, 1) do %>
                         <div class="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
-                          <div class="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
-                            Preview
-                          </div>
-
                           {apply(preview_component_module(), :cms_content_slot, [%{content_area: preview_area(area, @area_forms[area.id], @cms_slots)}])}
                         </div>
                       <% end %>
