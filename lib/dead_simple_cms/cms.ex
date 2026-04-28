@@ -411,28 +411,96 @@ defmodule DeadSimpleCms.Cms do
     CmsSlot.changeset(cms_slot, attrs)
   end
 
+  @doc """
+  Returns the list of cms_page_templates.
+
+  ## Examples
+
+      iex> list_cms_page_templates()
+      [%CmsPageTemplate{}, ...]
+
+  """
   def list_cms_page_templates do
     repo().all(CmsPageTemplate)
   end
 
-  def get_cms_page_template!(id), do: repo().get!(CmsPageTemplate, id)
+  @doc """
+  Gets a single cms_page_template.
 
+  Raises `Ecto.NoResultsError` if the Cms page template does not exist.
+
+  ## Examples
+
+      iex> get_cms_page_template!(123)
+      %CmsPageTemplate{}
+
+      iex> get_cms_page_template!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_cms_page_template!(id), do: repo().get!(CmsPageTemplate, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position], preload: [:cms_image, :cms_slot]))
+
+  @doc """
+  Creates a cms_page_template.
+
+  ## Examples
+
+      iex> create_cms_page_template(%{field: value})
+      {:ok, %CmsPageTemplate{}}
+
+      iex> create_cms_page_template(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
   def create_cms_page_template(attrs) do
     %CmsPageTemplate{}
     |> CmsPageTemplate.changeset(attrs)
     |> repo().insert()
   end
 
+  @doc """
+  Updates a cms_page_template.
+
+  ## Examples
+
+      iex> update_cms_page_template(cms_page_template, %{field: new_value})
+      {:ok, %CmsPageTemplate{}}
+
+      iex> update_cms_page_template(cms_page_template, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
   def update_cms_page_template(%CmsPageTemplate{} = cms_page_template, attrs) do
     cms_page_template
     |> CmsPageTemplate.changeset(attrs)
     |> repo().update()
   end
 
+  @doc """
+  Deletes a cms_page_template.
+
+  ## Examples
+
+      iex> delete_cms_page_template(cms_page_template)
+      {:ok, %CmsPageTemplate{}}
+
+      iex> delete_cms_page_template(cms_page_template)
+      {:error, %Ecto.Changeset{}}
+
+  """
   def delete_cms_page_template(%CmsPageTemplate{} = cms_page_template) do
     repo().delete(cms_page_template)
   end
 
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking cms_page_template changes.
+
+  ## Examples
+
+      iex> change_cms_page_template(cms_page_template)
+      %Ecto.Changeset{data: %CmsPageTemplate{}}
+
+  """
   def change_cms_page_template(%CmsPageTemplate{} = cms_page_template, attrs \\ %{}) do
     CmsPageTemplate.changeset(cms_page_template, attrs)
   end

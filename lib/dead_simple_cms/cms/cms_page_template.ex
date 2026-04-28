@@ -16,6 +16,7 @@ defmodule DeadSimpleCms.Cms.CmsPageTemplate do
     timestamps(type: :utc_datetime)
 
     has_many :cms_pages, DeadSimpleCms.Cms.CmsPage
+    has_many :cms_content_areas, DeadSimpleCms.Cms.CmsContentArea
   end
 
   @doc false

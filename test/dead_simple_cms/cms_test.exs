@@ -180,7 +180,10 @@ defmodule DeadSimpleCms.CmsTest do
 
   describe "cms_slots" do
     test "list_cms_slots/0 returns all cms_slots", %{data: data} do
-      assert Cms.list_cms_slots() == [data.cms_slot]
+      slots = Cms.list_cms_slots()
+
+      assert Enum.any?(slots, &(&1.key == "standard_content"))
+      assert Enum.any?(slots, &(&1.id == data.cms_slot.id))
     end
 
     test "get_cms_slot!/1 returns the cms_slot with given id", %{data: data} do
@@ -237,7 +240,7 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_cms_page_template!/1 returns the cms_page_template with given id", %{data: data} do
-      assert Cms.get_cms_page_template!(data.cms_page_template.id) == data.cms_page_template
+      assert Cms.get_cms_page_template!(data.cms_page_template.id) == Repo.preload(data.cms_page_template, cms_content_areas: [:cms_image, :cms_slot])
     end
 
     test "create_cms_page_template/1 with valid data creates a cms_page_template" do
@@ -271,7 +274,7 @@ defmodule DeadSimpleCms.CmsTest do
     test "update_cms_page_template/2 with invalid data returns error changeset", %{data: data} do
       assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_page_template(data.cms_page_template, %{key: "", name: ""})
       assert errors == [key: {"can't be blank", [validation: :required]}, name: {"can't be blank", [validation: :required]}]
-      assert data.cms_page_template == Cms.get_cms_page_template!(data.cms_page_template.id)
+      assert Repo.preload(data.cms_page_template, cms_content_areas: [:cms_image, :cms_slot]) == Cms.get_cms_page_template!(data.cms_page_template.id)
     end
 
     test "delete_cms_page_template/1 deletes the cms_page_template", %{data: data} do

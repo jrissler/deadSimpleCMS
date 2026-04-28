@@ -1,0 +1,43 @@
+defmodule <%= @app_module %>.Repo.Migrations.AddCmsPageTemplateToCmsContentAreas do
+  use Ecto.Migration
+
+  def up do
+    alter table(:cms_content_areas) do
+      modify :cms_page_id, :binary_id, null: true
+
+      add :cms_page_template_id,
+          references(:cms_page_templates, type: :binary_id, on_delete: :delete_all)
+    end
+
+    create index(:cms_content_areas, [:cms_page_template_id])
+
+    create constraint(
+             :cms_content_areas,
+             :page_or_template_required,
+             check: """
+             (cms_page_id IS NOT NULL AND cms_page_template_id IS NULL)
+             OR
+             (cms_page_id IS NULL AND cms_page_template_id IS NOT NULL)
+             """
+           )
+
+    execute("""
+    INSERT INTO cms_slots (id, key, name, description, inserted_at, updated_at)
+    VALUES (gen_random_uuid(), 'standard_content', 'Standard Title, Subtitle, Content body', NULL, NOW(), NOW())
+    ON CONFLICT (key) DO NOTHING
+    """)
+  end
+
+  def down do
+    execute("DELETE FROM cms_slots WHERE key = 'standard_content'")
+
+    drop constraint(:cms_content_areas, :page_or_template_required)
+
+    drop index(:cms_content_areas, [:cms_page_template_id])
+
+    alter table(:cms_content_areas) do
+      remove :cms_page_template_id
+      modify :cms_page_id, :binary_id, null: false
+    end
+  end
+end
