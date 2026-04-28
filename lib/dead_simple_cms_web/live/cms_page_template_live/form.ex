@@ -67,6 +67,7 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
                           <.input field={@area_forms[area.id][:name]} id={"content-area-#{area.id}-name"} type="text" label="Name" />
                           <.input field={@area_forms[area.id][:cms_slot_id]} id={"content-area-#{area.id}-cms-slot-id"} type="select" label="Slot" options={[{"Select a slot", nil}] ++ Enum.map(@cms_slots, &{&1.name, &1.id})} />
                           <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
+                          <.input field={@area_forms[area.id][:position]} id={"content-area-#{area.id}-position"} type="number" label="Position" />
                           <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
                           <.input field={@area_forms[area.id][:subtitle]} id={"content-area-#{area.id}-subtitle"} type="text" label="Subtitle" />
 
@@ -115,12 +116,13 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     cms_page_template = Cms.get_cms_page_template!(id)
+    areas = Enum.sort_by(cms_page_template.cms_content_areas, & &1.position)
 
     socket
     |> assign(:page_title, "Edit CMS Page Template")
     |> assign(:cms_page_template, cms_page_template)
-    |> assign(:areas, cms_page_template.cms_content_areas)
-    |> assign(:area_forms, build_area_forms(cms_page_template.cms_content_areas))
+    |> assign(:areas, areas)
+    |> assign(:area_forms, build_area_forms(areas))
     |> assign(:form, to_form(Cms.change_cms_page_template(cms_page_template)))
   end
 

@@ -24,7 +24,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
                |> render_click()
                |> follow_redirect(conn, ~p"/cms_pages/new")
 
-      assert render(form_live) =~ "New Cms page"
+      assert render(form_live) =~ "New CMS Page"
 
       assert form_live
              |> form("#cms_page-form", cms_page: params_for(:cms_page, slug: "some slug", title: "", cms_page_template_id: data.cms_page_template.id))
@@ -50,7 +50,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
                |> render_click()
                |> follow_redirect(conn, ~p"/cms_pages/#{data.cms_page}/edit")
 
-      assert render(form_live) =~ "Edit Cms page"
+      assert render(form_live) =~ "Edit CMS Page"
 
       assert form_live
              |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "", cms_page_template_id: data.cms_page_template.id))
@@ -92,7 +92,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
                |> render_click()
                |> follow_redirect(conn, ~p"/cms_pages/#{data.cms_page}/edit?return_to=show")
 
-      assert render(form_live) =~ "Edit Cms page"
+      assert render(form_live) =~ "Edit CMS Page"
 
       assert form_live
              |> form("#cms_page-form", cms_page: params_for(:cms_page, title: "", cms_page_template_id: data.cms_page_template.id))
