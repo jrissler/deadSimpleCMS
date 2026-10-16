@@ -83,6 +83,25 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert html =~ data.cms_page.title
     end
 
+    test "updates SEO fields from the edit form", %{conn: conn, data: data} do
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit?return_to=show")
+
+      assert form_live
+             |> form("#cms_page-form", cms_page: %{meta_description: String.duplicate("a", 321)})
+             |> render_change() =~ "should be at most 320 character(s)"
+
+      assert {:ok, show_live, _html} =
+               form_live
+               |> form("#cms_page-form", cms_page: %{meta_title: "Yacht Charter Marketing", meta_description: "Marketing for charter operators.", og_image_id: data.cms_image.id, noindex: true})
+               |> render_submit()
+               |> follow_redirect(conn, ~p"/cms_pages/#{data.cms_page}")
+
+      html = render(show_live)
+      assert html =~ "Yacht Charter Marketing"
+      assert html =~ "Marketing for charter operators."
+      assert html =~ data.cms_image.url
+    end
+
     test "updates cms_page and returns to show", %{conn: conn, data: data} do
       {:ok, show_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}")
 

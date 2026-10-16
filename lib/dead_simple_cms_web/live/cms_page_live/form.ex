@@ -29,6 +29,30 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                   <.input field={@form[:cms_page_template_id]} type="select" label="Page Template (Optional)" options={[{"Select a template", nil}] ++ Enum.map(@cms_page_templates, &{&1.name, &1.id})} />
                 </div>
 
+                <div class="border-t border-zinc-200 pt-6">
+                  <h2 class="text-base font-semibold tracking-tight text-gray-900">SEO</h2>
+                  <p class="mt-1 text-sm text-gray-600">Optional. Controls how this page appears in search results and when shared.</p>
+
+                  <div class="mt-4 grid grid-cols-1 gap-6">
+                    <div>
+                      <.input field={@form[:meta_title]} type="text" label="Meta title" />
+                      <p class="mt-1 text-xs text-gray-500">{char_count(@form, :meta_title)} characters. Aim for 60 or fewer. Falls back to the page title when blank.</p>
+                    </div>
+
+                    <div>
+                      <.input field={@form[:meta_description]} type="textarea" label="Meta description" />
+                      <p class="mt-1 text-xs text-gray-500">{char_count(@form, :meta_description)} characters. Aim for 150–160.</p>
+                    </div>
+
+                    <.input field={@form[:og_image_id]} type="select" label="Social share image" options={[{"None", nil}] ++ Enum.map(@cms_images, &{&1.alt || &1.filename, &1.id})} />
+
+                    <div>
+                      <.input field={@form[:noindex]} type="checkbox" label="Hide from search engines (noindex)" />
+                      <p class="mt-1 text-xs text-gray-500">Noindex pages are also left out of the sitemap.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-6 sm:flex-row sm:justify-end">
                   <.link navigate={return_path(@return_to, @cms_page)} class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500">
                     Cancel
@@ -125,7 +149,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    {:ok, socket |> assign(:return_to, return_to(params["return_to"])) |> assign(:cms_page_templates, Cms.list_cms_page_templates()) |> assign(:cms_slots, Cms.list_cms_slots()) |> apply_action(socket.assigns.live_action, params)}
+    {:ok, socket |> assign(:return_to, return_to(params["return_to"])) |> assign(:cms_page_templates, Cms.list_cms_page_templates()) |> assign(:cms_images, Cms.list_cms_images()) |> assign(:cms_slots, Cms.list_cms_slots()) |> apply_action(socket.assigns.live_action, params)}
   end
 
   defp return_to("show"), do: "show"
@@ -225,6 +249,8 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
+
+  defp char_count(form, field), do: form |> Phoenix.HTML.Form.input_value(field) |> to_string() |> String.length()
 
   defp return_path("index", _cms_page), do: DeadSimpleCms.path("/cms_pages")
   defp return_path("show", cms_page), do: DeadSimpleCms.path("/cms_pages/#{cms_page.id}")

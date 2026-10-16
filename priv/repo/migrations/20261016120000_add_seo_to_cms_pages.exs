@@ -1,0 +1,14 @@
+defmodule DeadSimpleCms.Repo.Migrations.AddSeoToCmsPages do
+  use Ecto.Migration
+
+  def change do
+    alter table(:cms_pages) do
+      add :meta_title, :string
+      add :meta_description, :text
+      add :noindex, :boolean, null: false, default: false
+      add :og_image_id, references(:cms_images, type: :binary_id, on_delete: :nilify_all)
+    end
+
+    create index(:cms_pages, [:og_image_id])
+  end
+end

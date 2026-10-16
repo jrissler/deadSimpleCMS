@@ -18,11 +18,11 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_cms_page!/1 returns the cms_page with given id", %{data: data} do
-      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, cms_content_areas: [:cms_image, :cms_slot])
+      assert Cms.get_cms_page!(data.cms_page.id) == Repo.preload(data.cms_page, [:og_image, cms_content_areas: [:cms_image, :cms_slot]])
     end
 
     test "get_published_page_by_slug/1 returns the cms_page with given slug", %{data: data} do
-      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, cms_content_areas: [:cms_image, :cms_slot])
+      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, [:og_image, cms_content_areas: [:cms_image, :cms_slot]])
     end
 
     test "create_cms_page/1 with valid data creates a cms_page" do
@@ -51,7 +51,7 @@ defmodule DeadSimpleCms.CmsTest do
     test "update_cms_page/2 with invalid data returns error changeset", %{data: data} do
       assert {:error, %Ecto.Changeset{errors: errors}} = Cms.update_cms_page(data.cms_page, params_for(:cms_page, title: ""))
       assert errors == [{:title, {"can't be blank", [validation: :required]}}]
-      assert Repo.preload(data.cms_page, cms_content_areas: [:cms_image, :cms_slot]) == Cms.get_cms_page!(data.cms_page.id)
+      assert Repo.preload(data.cms_page, [:og_image, cms_content_areas: [:cms_image, :cms_slot]]) == Cms.get_cms_page!(data.cms_page.id)
     end
 
     test "delete_cms_page/1 deletes the cms_page", %{data: data} do
@@ -61,6 +61,38 @@ defmodule DeadSimpleCms.CmsTest do
 
     test "change_cms_page/1 returns a cms_page changeset", %{data: data} do
       assert %Ecto.Changeset{} = Cms.change_cms_page(data.cms_page)
+    end
+
+    test "create_cms_page/1 with SEO data creates a cms_page", %{data: data} do
+      attrs = params_for(:cms_page, meta_title: "Yacht Charter Marketing", meta_description: "Marketing for charter operators.", noindex: true, og_image_id: data.cms_image.id)
+
+      assert {:ok, %CmsPage{} = cms_page} = Cms.create_cms_page(attrs)
+      assert cms_page.meta_title == "Yacht Charter Marketing"
+      assert cms_page.meta_description == "Marketing for charter operators."
+      assert cms_page.noindex
+      assert cms_page.og_image_id == data.cms_image.id
+    end
+
+    test "create_cms_page/1 rejects a meta_description over 320 characters" do
+      assert {:error, %Ecto.Changeset{errors: [meta_description: _]}} = Cms.create_cms_page(params_for(:cms_page, meta_description: String.duplicate("a", 321)))
+    end
+
+    test "list_sitemap_cms_pages/0 excludes unpublished and noindex pages", %{data: data} do
+      insert(:cms_page, published: false)
+      insert(:cms_page, noindex: true)
+
+      assert Cms.list_sitemap_cms_pages() == [data.cms_page]
+    end
+
+    test "page_seo/1 falls back to the page title and defaults", %{data: data} do
+      assert Cms.page_seo(data.cms_page) == %{title: data.cms_page.title, description: nil, og_image_url: nil, og_image_alt: nil, robots: "index, follow"}
+    end
+
+    test "page_seo/1 resolves SEO fields and the og image", %{data: data} do
+      {:ok, cms_page} = Cms.update_cms_page(data.cms_page, %{meta_title: "Meta", meta_description: "Description", noindex: true, og_image_id: data.cms_image.id})
+      cms_page = Cms.get_cms_page!(cms_page.id)
+
+      assert Cms.page_seo(cms_page) == %{title: "Meta", description: "Description", og_image_url: data.cms_image.url, og_image_alt: data.cms_image.alt, robots: "noindex, follow"}
     end
   end
 

@@ -41,7 +41,7 @@ defmodule DeadSimpleCms.Cms do
 
   """
   def get_cms_page!(id) do
-    repo().get!(CmsPage, id) |> repo().preload(cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position], preload: [:cms_image, :cms_slot]))
+    repo().get!(CmsPage, id) |> repo().preload([:og_image, cms_content_areas: from(a in CmsContentArea, order_by: [asc: a.position], preload: [:cms_image, :cms_slot])])
   end
 
   @doc """
@@ -60,9 +60,61 @@ defmodule DeadSimpleCms.Cms do
   def get_published_page_by_slug(slug) do
     visible_areas_query = from(a in CmsContentArea, where: a.visible == true, order_by: [asc: a.position], preload: [:cms_image, :cms_slot])
 
-    from(p in CmsPage, where: p.slug == ^slug and p.published == true, preload: [cms_content_areas: ^visible_areas_query])
+    from(p in CmsPage, where: p.slug == ^slug and p.published == true, preload: [:og_image, cms_content_areas: ^visible_areas_query])
     |> repo().one()
   end
+
+  @doc """
+  Returns published pages that should appear in a sitemap, ordered by slug.
+
+  Pages marked `noindex` are excluded. The host app owns the sitemap route,
+  URL structure, and XML rendering.
+
+  ## Examples
+
+      iex> list_sitemap_cms_pages()
+      [%CmsPage{}, ...]
+
+  """
+  def list_sitemap_cms_pages do
+    from(p in CmsPage, where: p.published == true and p.noindex == false, order_by: [asc: p.slug])
+    |> repo().all()
+  end
+
+  @doc """
+  Returns resolved SEO metadata for a page, for the host app to render into
+  `<head>`.
+
+  - `:title` falls back to the page `title` when `meta_title` is blank
+  - `:description` and `:og_image_url` are `nil` when unset
+  - `:robots` is `"noindex, follow"` when `noindex` is set, otherwise `"index, follow"`
+
+  `:og_image_url` and `:og_image_alt` require `og_image` to be preloaded
+  (`get_cms_page!/1` and `get_published_page_by_slug/1` do this).
+
+  The canonical URL is not included: it depends on the host app's routes and
+  domain, so the host builds it (usually a self-referencing URL for the page).
+
+  ## Examples
+
+      iex> page_seo(cms_page)
+      %{title: "Yacht Charter Marketing", description: "...", og_image_url: nil, og_image_alt: nil, robots: "index, follow"}
+
+  """
+  def page_seo(%CmsPage{} = cms_page) do
+    og_image = if match?(%CmsImage{}, cms_page.og_image), do: cms_page.og_image
+
+    %{
+      title: presence(cms_page.meta_title) || cms_page.title,
+      description: presence(cms_page.meta_description),
+      og_image_url: og_image && og_image.url,
+      og_image_alt: og_image && presence(og_image.alt),
+      robots: if(cms_page.noindex, do: "noindex, follow", else: "index, follow")
+    }
+  end
+
+  defp presence(value) when is_binary(value), do: if(String.trim(value) == "", do: nil, else: value)
+  defp presence(_value), do: nil
 
   @doc """
   Creates a cms_page.

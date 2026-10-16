@@ -14,7 +14,9 @@ It is _not_ a general-purpose CMS.
 
 DeadSimpleCms provides:
 
-- Structured content storage (`cms_pages`, `cms_content_areas`, `cms_images`)
+- Structured content storage (`cms_pages`, `cms_content_areas`, `cms_images`, `cms_slots`, `cms_page_templates`)
+- Per-page SEO metadata (meta title/description, noindex, social share image) and a sitemap query
+- Reusable special content: staff bios (`cms_bios`) and testimonials (`cms_testimonials`)
 - A small, predictable admin UI built with Phoenix LiveView
 - Validation, ordering, and visibility flags
 - Repo indirection so the host app owns persistence
@@ -58,29 +60,58 @@ This makes the library:
 
 ## Data Model Overview
 
-DeadSimpleCms provides three core concepts:
-
 ### CMS Pages (`cms_pages`)
 
-- `slug`
+- `slug` (normalized: lowercase, hyphenated)
 - `title`
 - `published`
 - `published_at`
+- `cms_page_template_id` (optional)
 
-Public reads should typically filter on `published == true`.
+SEO fields (all optional):
+
+- `meta_title`: falls back to `title` when blank (aim for 60 characters or fewer)
+- `meta_description`: up to 320 characters (aim for 150–160)
+- `noindex`: hides the page from search engines and from `list_sitemap_cms_pages/0`
+- `og_image_id`: a `cms_images` record used as the social share image
+
+Public reads should go through `get_published_page_by_slug/1`, which only
+returns published pages.
 
 ---
 
 ### CMS Content Areas (`cms_content_areas`)
 
-- Belong to a page via `page_id`
+- Belong to **either** a page (`cms_page_id`) **or** a page template
+  (`cms_page_template_id`), enforced by a database check constraint
+- Belong to a slot (`cms_slot_id`, required)
 - Ordered via `position` (integer)
-- Optional `name` (scoped per page)
+- `name` (scoped per page)
 - Optional `visible` flag
-- Structured fields (`title`, `subtitle`, `body_md`, etc.)
+- Structured fields (`title`, `subtitle`, `body_md`)
+- Optional image (`cms_image_id`)
 
 Admin views allow move up/down and renumber operations.\
 No drag-and-drop.
+
+---
+
+### CMS Slots (`cms_slots`)
+
+- `key`, `name`, `description`
+
+A slot tells the host app **which component renders a content area**.
+The host matches on `area.cms_slot.key` (for example `"hero"`, `"faq"`,
+`"standard_content"`). The install migrations seed a `standard_content` slot.
+
+---
+
+### CMS Page Templates (`cms_page_templates`)
+
+- `key`, `name`, `description`
+
+A template groups content areas that define a page's shape. Pages may
+optionally reference a template.
 
 ---
 
@@ -95,6 +126,16 @@ No drag-and-drop.
 
 Images are uploaded directly to S3 using presigned URLs.\
 The CMS stores metadata only.
+
+---
+
+### Special Content (`cms_bios`, `cms_testimonials`)
+
+- **Bios:** name, job title, tag line, description, contact and social links,
+  `slug` (generated from the name when blank), `visible`, optional image
+- **Testimonials:** name, title, company, source, quote, `stars` (1–5), `visible`
+
+Managed through `DeadSimpleCms.SpecialContent`.
 
 ---
 
@@ -150,6 +191,9 @@ config :dead_simple_cms,
 
 - `admin_layout`
 - `admin_path`
+- `preview_components`: a module exporting `cms_content_slot/1`. When set,
+  the page editor renders a live preview of each content area using your
+  own components.
 
 ---
 
@@ -168,9 +212,22 @@ This will:
 
 - Copy migration files into your app (`priv/repo/migrations`)
 - Copy a baseline `cms_components.ex` file (if not present)
-- Copy `assets/js/uploader.js` (if not present)
+- Copy `assets/js/uploaders.js` (if not present)
+- Copy the EasyMDE markdown editor (`assets/js/easymde.min.js`,
+  `assets/css/easymde.min.css`) (if not present)
 
 Your app owns the schema from this point forward.
+
+#### Upgrading
+
+Re-run the installer after upgrading DeadSimpleCms. Migrations that are
+already installed are skipped (matched by name, ignoring the timestamp), so
+only new ones, such as `add_seo_to_cms_pages`, are copied:
+
+```bash
+mix dead_simple_cms.install
+mix ecto.migrate
+```
 
 ---
 
@@ -184,7 +241,7 @@ In `assets/js/app.js`:
 1.  Import the uploader:
 
 ```javascript
-import Uploaders from "./uploader";
+import Uploaders from "./uploaders";
 ```
 
 2.  Pass it into LiveSocket:
@@ -228,14 +285,29 @@ Minimal LiveView example:
 
 ```elixir
 def mount(%{"slug" => slug}, _session, socket) do
-  page = DeadSimpleCms.Cms.get_published_page_by_slug!(slug)
-  areas = DeadSimpleCms.Cms.list_areas_for_page(page.id)
+  case DeadSimpleCms.Cms.get_published_page_by_slug(slug) do
+    nil ->
+      # Handle not found however your app does (404 page, redirect, etc.)
+      {:ok, push_navigate(socket, to: "/")}
 
-  {:ok, assign(socket, page: page, areas: areas)}
+    page ->
+      seo = DeadSimpleCms.Cms.page_seo(page)
+
+      {:ok,
+       socket
+       |> assign(:page, page)
+       |> assign(:areas, page.cms_content_areas)
+       |> assign(:page_title, seo.title)
+       |> assign(:canonical_url, url(~p"/pages/#{page.slug}"))
+       |> assign(:seo, seo)}
+  end
 end
 ```
 
-Render using your own components:
+`page.cms_content_areas` contains only visible areas, ordered by
+`position`, with `cms_image` and `cms_slot` preloaded.
+
+Render using your own components, choosing one per slot:
 
 ```elixir
 <%= for area <- @areas do %>
@@ -244,6 +316,81 @@ Render using your own components:
 ```
 
 You own layout, styling, sanitization, and markdown rendering.
+
+---
+
+## SEO
+
+DeadSimpleCms stores SEO metadata and resolves fallbacks. Your root layout
+renders the tags.
+
+`DeadSimpleCms.Cms.page_seo/1` returns:
+
+```elixir
+%{
+  title: "Yacht Charter Marketing",        # meta_title, or the page title
+  description: "Marketing for charter…",   # nil when blank
+  og_image_url: "https://…/hero.jpg",       # nil without og_image
+  og_image_alt: "Charter yacht at anchor",  # nil without alt text
+  robots: "index, follow"                   # "noindex, follow" when noindex
+}
+```
+
+`og_image` must be preloaded. `get_published_page_by_slug/1` and
+`get_cms_page!/1` both preload it.
+
+Example `<head>` (in your root layout):
+
+```heex
+<%= if seo = assigns[:seo] do %>
+  <meta :if={seo.description} name="description" content={seo.description} />
+  <meta name="robots" content={seo.robots} />
+  <meta property="og:title" content={seo.title} />
+  <meta :if={seo.description} property="og:description" content={seo.description} />
+  <meta :if={seo.og_image_url} property="og:image" content={seo.og_image_url} />
+  <meta :if={seo.og_image_alt} property="og:image:alt" content={seo.og_image_alt} />
+  <meta name="twitter:card" content={if seo.og_image_url, do: "summary_large_image", else: "summary"} />
+<% end %>
+<link :if={assigns[:canonical_url]} rel="canonical" href={@canonical_url} />
+```
+
+### Canonical URLs
+
+DeadSimpleCms does not store canonical URLs. Only the host app knows its
+domain and route structure, so it builds them, usually pointing each page
+at itself:
+
+```elixir
+|> assign(:canonical_url, url(~p"/pages/#{page.slug}"))
+```
+
+Build it from the slug, not the incoming request URL, so query strings and
+alternate hosts don't create duplicate canonicals.
+
+Social platforms fetch `og:image` anonymously. If your S3 bucket is private,
+use a public bucket or CDN for share images.
+
+### Sitemap
+
+`DeadSimpleCms.Cms.list_sitemap_cms_pages/0` returns published pages that
+are not `noindex`, ordered by slug. The host app owns the route and URLs:
+
+```elixir
+# router.ex
+get "/sitemap.xml", SitemapController, :index
+
+# sitemap_controller.ex
+def index(conn, _params) do
+  urls =
+    for page <- DeadSimpleCms.Cms.list_sitemap_cms_pages() do
+      ~s(<url><loc>#{url(~p"/pages/#{page.slug}")}</loc><lastmod>#{Date.to_iso8601(page.updated_at)}</lastmod></url>)
+    end
+
+  conn
+  |> put_resp_content_type("application/xml")
+  |> send_resp(200, ~s(<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">#{urls}</urlset>))
+end
+```
 
 ---
 
@@ -291,6 +438,7 @@ After setup, verify:
 - You can add content areas
 - Image uploads succeed (confirms S3 + JS wiring)
 - Public page route renders published content
+- Page `<head>` includes the SEO tags you set, and `/sitemap.xml` lists the page
 
 ---
 

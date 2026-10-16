@@ -43,6 +43,24 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
                   {@cms_page.published_at && Calendar.strftime(@cms_page.published_at, "%Y-%m-%d")}
                 </td>
               </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Meta Title</td>
+                <td class="data-table-td text-sm text-gray-500">{@cms_page.meta_title}</td>
+              </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Meta Description</td>
+                <td class="data-table-td text-sm text-gray-500">{@cms_page.meta_description}</td>
+              </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Social Share Image</td>
+                <td class="data-table-td text-sm text-gray-500">
+                  <img :if={@cms_page.og_image} src={@cms_page.og_image.url} alt={@cms_page.og_image.alt || ""} class="h-16 w-28 object-cover rounded ring-1 ring-gray-300" />
+                </td>
+              </:row>
+              <:row>
+                <td class="data-table-td text-sm text-gray-500">Noindex</td>
+                <td class="data-table-td text-sm text-gray-500">{(@cms_page.noindex && "Yes") || "No"}</td>
+              </:row>
             </.non_list_table>
           </section>
         </div>
