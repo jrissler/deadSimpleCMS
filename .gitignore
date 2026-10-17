@@ -34,3 +34,6 @@ dead_simple_cms-*.tar
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
+
+# Local scratch content, not part of the library
+/lib/dead_simple_cms_web/temp/
