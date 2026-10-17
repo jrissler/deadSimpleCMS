@@ -10,14 +10,13 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     - EEx migration templates -> host priv/repo/migrations/<timestamp>_*.exs
     - required CmsComponents module -> host lib/<app>_web/components/cms_components.ex (or a user-provided path)
     - required assets/js/uploaders.js
-    - required assets/js/easy_mde.js
-    - required assets/css/easy_mde.css
+    - required assets/js/easymde.min.js
+    - required assets/js/easymde_hook.js
+    - required assets/css/easymde.min.css
 
   Re-running the installer:
     - skips migrations already installed (matched by basename, ignoring timestamp)
-    - skips uploaders.js if it already exists
-    - skips easy_mde.js if it already exists
-    - skips easy_mde.css if it already exists
+    - skips uploaders.js, easymde.min.js, easymde_hook.js, and easymde.min.css if they already exist
     - skips cms_components.ex if it already exists
 
   Usage:
@@ -46,12 +45,15 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     assets_uploader_dest = Path.join(["assets", "js", "uploaders.js"])
     assets_easy_mde_js_src = Path.join([templates_root, "assets", "js", "easymde.min.js"])
     assets_easy_mde_js_dest = Path.join(["assets", "js", "easymde.min.js"])
+    assets_easy_mde_hook_src = Path.join([templates_root, "assets", "js", "easymde_hook.js"])
+    assets_easy_mde_hook_dest = Path.join(["assets", "js", "easymde_hook.js"])
     assets_easy_mde_css_src = Path.join([templates_root, "assets", "css", "easymde.min.css"])
     assets_easy_mde_css_dest = Path.join(["assets", "css", "easymde.min.css"])
     components_src = Path.join([templates_root, "web", "cms_components.ex.eex"])
 
     copy_optional_if_missing!(assets_uploader_src, assets_uploader_dest, assigns, "assets uploader")
     copy_optional_if_missing!(assets_easy_mde_js_src, assets_easy_mde_js_dest, assigns, "EasyMDE JS")
+    copy_optional_if_missing!(assets_easy_mde_hook_src, assets_easy_mde_hook_dest, assigns, "EasyMDE hook")
     copy_optional_if_missing!(assets_easy_mde_css_src, assets_easy_mde_css_dest, assigns, "EasyMDE CSS")
     copy_migrations!(migrations_src, migrations_dest, assigns)
     copy_optional_if_missing!(components_src, components_path, assigns, "components")
@@ -60,8 +62,8 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     Mix.shell().info("✅ DeadSimpleCMS install complete. Next:")
     Mix.shell().info("[ ] mix ecto.migrate")
     Mix.shell().info("[ ] Add DeadSimpleCmsWeb.Router.dead_simple_cms_admin_routes() to your router")
-    Mix.shell().info("[ ] Import ./uploaders and ./easy_mde in assets/js/app.js")
-    Mix.shell().info("[ ] Import ./easy_mde.css in assets/css/app.css")
+    Mix.shell().info("[ ] In assets/js/app.js: import ./uploaders and ./easymde_hook, pass uploaders: Uploaders and add EasyMDE to your hooks")
+    Mix.shell().info("[ ] Import ./easymde.min.css in assets/css/app.css")
   end
 
   defp copy_optional_if_missing!(src, dest, assigns, label) do
@@ -150,8 +152,9 @@ defmodule Mix.Tasks.DeadSimpleCms.Install do
     |> String.to_atom()
   end
 
+  # app_module/0 is a bare atom such as :MyApp, so this renders as "MyAppWeb"
   defp web_module do
-    Module.concat([app_module(), "Web"])
+    "#{app_module()}Web"
   end
 
   defp default_components_path do

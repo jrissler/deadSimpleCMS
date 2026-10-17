@@ -170,12 +170,7 @@ config :dead_simple_cms,
   endpoint: YourAppWeb.Endpoint,
   admin_layout: {YourAppWeb.Layouts, :app},
   admin_path: "/cms",
-  s3: [
-    bucket: "your-bucket",
-    region: "your-region ie: us-east-1",
-    access_key_id: "your-key",
-    secret_access_key: "your-secret"
-  ]
+  s3: [bucket: "your-bucket"]
 ```
 
 ### Required
@@ -183,14 +178,16 @@ config :dead_simple_cms,
 - `repo`
 - `endpoint`
 - `s3.bucket`
-- `s3.region`
-- `s3.access_key_id`
-- `s3.secret_access_key`
 
 ### Optional
 
-- `admin_layout`
-- `admin_path`
+- `s3.region`, `s3.access_key_id`, `s3.secret_access_key`: when omitted,
+  your app's existing `config :ex_aws` settings are used. When given, they
+  are written into the `:ex_aws` config (and so apply app-wide).
+- `admin_layout`: read at compile time. After changing it, run
+  `mix deps.compile dead_simple_cms --force`.
+- `admin_path`: the prefix you mount the admin routes under (for example
+  `"/admin"`), used to build links between admin pages.
 - `preview_components`: a module exporting `cms_content_slot/1`. When set,
   the page editor renders a live preview of each content area using your
   own components.
@@ -214,9 +211,22 @@ This will:
 - Copy a baseline `cms_components.ex` file (if not present)
 - Copy `assets/js/uploaders.js` (if not present)
 - Copy the EasyMDE markdown editor (`assets/js/easymde.min.js`,
-  `assets/css/easymde.min.css`) (if not present)
+  `assets/js/easymde_hook.js`, `assets/css/easymde.min.css`) (if not present)
 
 Your app owns the schema from this point forward.
+
+#### Umbrella apps
+
+Run the installer from the app that owns the Repo, so migrations land in its
+`priv/repo/migrations`, and point `--components-path` at your web app:
+
+```bash
+cd apps/my_app
+mix dead_simple_cms.install --components-path ../my_app_web/lib/my_app_web/components/cms_components.ex
+```
+
+Then move the copied `assets/js/*` and `assets/css/*` files into the web
+app's `assets/` directory.
 
 #### Upgrading
 
@@ -231,29 +241,53 @@ mix ecto.migrate
 
 ---
 
-### 4. Wire Uploaders (Manual Step)
+### 4. Wire Uploaders and the Markdown Editor (Manual Step)
 
 Because JavaScript bootstrapping varies per app, DeadSimpleCms does
 **not** patch your `app.js` automatically.
 
 In `assets/js/app.js`:
 
-1.  Import the uploader:
-
 ```javascript
 import Uploaders from "./uploaders";
-```
+import EasyMDEHook from "./easymde_hook";
 
-2.  Pass it into LiveSocket:
-
-```javascript
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   uploaders: Uploaders,
+  hooks: { ...yourHooks, EasyMDE: EasyMDEHook },
 });
 ```
 
-This enables direct-to-S3 PUT uploads via presigned URLs.
+`Uploaders` enables direct-to-S3 PUT uploads via presigned URLs. The
+`EasyMDE` hook powers the markdown editor on content areas.
+
+In `assets/css/app.css`, import the editor styles:
+
+```css
+@import "./easymde.min.css";
+```
+
+### Styling the Admin UI
+
+The admin views use Tailwind utility classes plus a handful of
+[daisyUI](https://daisyui.com/) component classes (`btn`, `btn-primary`,
+`btn-ghost`, `btn-soft`, `fieldset`, `label`, `input`, `select`,
+`textarea`, `checkbox`). Phoenix 1.8 apps include daisyUI by default. If
+yours doesn't, define those classes yourself.
+
+Either way, add the library to your Tailwind sources so its utility
+classes are generated:
+
+```javascript
+// Tailwind v3: tailwind.config.js
+content: [..., "../../deps/dead_simple_cms/lib/**/*.*ex"]
+```
+
+```css
+/* Tailwind v4: app.css */
+@source "../../deps/dead_simple_cms/lib";
+```
 
 ---
 

@@ -21,29 +21,26 @@ defmodule DeadSimpleCms do
     prefix <> suffix
   end
 
+  @doc """
+  Ensures the S3 settings needed for image uploads are present.
+
+  `config :dead_simple_cms, :s3` must include `:bucket`. `:region`,
+  `:access_key_id`, and `:secret_access_key` are optional: when given they are
+  written to the `:ex_aws` config, and when omitted the host app's existing
+  `:ex_aws` config is used as-is.
+  """
   def ensure_ex_aws_configured do
     s3 = Application.get_env(:dead_simple_cms, :s3)
 
-    unless is_list(s3) do
-      raise ArgumentError,
-            "config :dead_simple_cms, :s3, [...] is required (must include :region, :access_key_id, :secret_access_key, :bucket)"
+    unless is_list(s3) and is_binary(Keyword.get(s3, :bucket)) do
+      raise ArgumentError, "config :dead_simple_cms, :s3, bucket: \"...\" is required"
     end
 
-    region = Keyword.get(s3, :region)
-    access_key_id = Keyword.get(s3, :access_key_id)
-    secret_access_key = Keyword.get(s3, :secret_access_key)
-    bucket = Keyword.get(s3, :bucket)
-
-    if is_nil(region) or is_nil(access_key_id) or is_nil(secret_access_key) or is_nil(bucket) do
-      raise ArgumentError,
-            "config :dead_simple_cms, :s3 must include :region, :access_key_id, :secret_access_key, :bucket"
+    for key <- [:region, :access_key_id, :secret_access_key], value = Keyword.get(s3, key), not is_nil(value) do
+      Application.put_env(:ex_aws, key, value)
     end
 
-    Application.put_env(:ex_aws, :json_codec, Jason)
-    Application.put_env(:ex_aws, :region, region)
-    Application.put_env(:ex_aws, :access_key_id, access_key_id)
-    Application.put_env(:ex_aws, :secret_access_key, secret_access_key)
-    Application.put_env(:ex_aws, :bucket, bucket)
+    unless Application.get_env(:ex_aws, :json_codec), do: Application.put_env(:ex_aws, :json_codec, Jason)
 
     :ok
   end
