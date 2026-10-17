@@ -25,6 +25,18 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
       the component system used by Phoenix. Some components, such as `<.link>`
       and `<.form>`, are defined there.
 
+  ## Overriding admin components
+
+  Host apps can replace `content_header/1`, `admin_table/1`, `non_list_table/1`,
+  and `button/1` in the admin UI by pointing `:admin_components` at a module:
+
+      config :dead_simple_cms, admin_components: MyAppWeb.CmsAdminComponents
+
+  Any of those functions the module defines (arity 1) is called instead of the
+  built-in one, with the same assigns and slots. Functions it doesn't define
+  fall back to the built-in. The built-in markup is available as
+  `default_content_header/1`, `default_admin_table/1`, `default_non_list_table/1`,
+  and `default_button/1`, so an override can wrap it instead of rewriting it.
   """
   use Phoenix.Component
   use Gettext, backend: DeadSimpleCmsWeb.Gettext
@@ -89,7 +101,10 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
 
   slot :inner_block, required: true
 
-  def button(assigns) do
+  def button(assigns), do: render_admin_component(:button, assigns, &default_button/1)
+
+  @doc "Built-in markup for `button/1`. See \"Overriding admin components\"."
+  def default_button(assigns) do
     ~H"""
     <%= if @navigate || @patch || @href do %>
       <.link navigate={@navigate} patch={@patch} href={@href} class={button_class(@variant, @class)} {@rest}>{render_slot(@inner_block)}</.link>
@@ -498,12 +513,10 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
 
   slot :action, doc: "the slot for showing a user action in the top right of card"
 
-  def content_header(assigns) do
-    assigns =
-      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
-        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
-      end
+  def content_header(assigns), do: render_admin_component(:content_header, assigns, &default_content_header/1)
 
+  @doc "Built-in markup for `content_header/1`. See \"Overriding admin components\"."
+  def default_content_header(assigns) do
     ~H"""
     <section class="mt-2">
       <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -540,8 +553,8 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
             </div>
           </div>
         </div>
-        
-    <!-- tabs -->
+
+        <!-- tabs -->
         <div class="relative grid grid-cols-1 divide-y divide-white/10 border-t border-white/10 bg-white/[0.04] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <div :for={tab <- @tab} class="px-6 py-5 text-center text-sm font-medium">
             <span class="text-white">{tab[:value]}</span>
@@ -588,7 +601,10 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
 
   slot :action, doc: "the slot for showing user actions in the last table column"
 
-  def admin_table(assigns) do
+  def admin_table(assigns), do: render_admin_component(:admin_table, assigns, &default_admin_table/1)
+
+  @doc "Built-in markup for `admin_table/1`. See \"Overriding admin components\"."
+  def default_admin_table(assigns) do
     assigns =
       with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
         assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
@@ -654,7 +670,27 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
     """
   end
 
-  def non_list_table(assigns) do
+  @doc ~S"""
+  Renders a key/value style table (for example a record's fields on a show page).
+
+  ## Examples
+
+      <.non_list_table object_name="cms_page" headers={["Field", "Value"]}>
+        <:row>
+          <td class="data-table-td">Title</td>
+          <td class="data-table-td">{@cms_page.title}</td>
+        </:row>
+      </.non_list_table>
+  """
+  attr :object_name, :string, required: true, doc: "used as the tbody id"
+  attr :headers, :list, required: true
+
+  slot :row, doc: "a table row; render its <td> cells inside"
+
+  def non_list_table(assigns), do: render_admin_component(:non_list_table, assigns, &default_non_list_table/1)
+
+  @doc "Built-in markup for `non_list_table/1`. See \"Overriding admin components\"."
+  def default_non_list_table(assigns) do
     ~H"""
     <table class="data-table w-full">
       <thead class="bg-gray-50">
@@ -676,6 +712,18 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
       </tbody>
     </table>
     """
+  end
+
+  # Calls the host's override from `config :dead_simple_cms, :admin_components`
+  # when it defines `name/1`, otherwise the built-in `default` markup.
+  defp render_admin_component(name, assigns, default) do
+    module = Application.get_env(:dead_simple_cms, :admin_components)
+
+    if module && Code.ensure_loaded?(module) && function_exported?(module, name, 1) do
+      apply(module, name, [assigns])
+    else
+      default.(assigns)
+    end
   end
 
   ## JS Commands

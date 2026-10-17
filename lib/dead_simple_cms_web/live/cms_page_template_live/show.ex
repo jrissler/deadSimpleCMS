@@ -31,10 +31,10 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Show do
                 <td class="data-table-td text-sm text-gray-500">Name</td>
                 <td class="data-table-td text-sm text-gray-500">{@cms_page_template.name}</td>
               </:row>
-              <::row>
+              <:row>
                 <td class="data-table-td text-sm text-gray-500">Description</td>
                 <td class="data-table-td text-sm text-gray-500">{@cms_page_template.description}</td>
-              </::row>
+              </:row>
             </.non_list_table>
           </section>
         </div>

@@ -289,6 +289,62 @@ content: [..., "../../deps/dead_simple_cms/lib/**/*.*ex"]
 @source "../../deps/dead_simple_cms/lib";
 ```
 
+### Overriding Admin Components
+
+To change more than styles, replace the admin UI's building blocks with your
+own components:
+
+```elixir
+# config/config.exs
+config :dead_simple_cms, admin_components: YourAppWeb.CmsAdminComponents
+```
+
+These can be overridden:
+
+| Component | Used for | Assigns / slots |
+| --- | --- | --- |
+| `content_header/1` | The header card at the top of every admin page | `main_title`, `sub_title`, `description`, `sub_description`, `icon_class`; slots `:action`, `:tab` |
+| `admin_table/1` | Index tables | `id`, `rows`, `row_id`, `row_click`, `row_item`; slots `:col` (`label`, `extra_th_class`, `extra_td_class`), `:tab`, `:action` |
+| `non_list_table/1` | Field/value tables on show pages | `object_name`, `headers`; slot `:row` |
+| `button/1` | Form buttons | `type`, `variant`, `navigate`, `patch`, `href`, `class`, `rest`; slot `:inner_block` |
+
+Define only the ones you want to change. The rest keep the built-in markup.
+Overrides receive the same assigns and slots as the built-in version, and
+the built-ins are available as `default_content_header/1`,
+`default_admin_table/1`, `default_non_list_table/1`, and `default_button/1`,
+so an override can wrap one instead of rewriting it:
+
+```elixir
+defmodule YourAppWeb.CmsAdminComponents do
+  use Phoenix.Component
+
+  alias DeadSimpleCmsWeb.CoreComponents
+
+  # Replace the header entirely
+  def content_header(assigns) do
+    ~H"""
+    <header class="flex items-center justify-between border-b pb-4">
+      <div>
+        <h1 class="text-xl font-semibold">{@main_title}</h1>
+        <p class="text-sm text-gray-500">{@description}</p>
+      </div>
+      <div :for={action <- @action}>{render_slot(action)}</div>
+    </header>
+    """
+  end
+
+  # Keep the built-in button, add your own classes
+  def button(assigns) do
+    CoreComponents.default_button(Map.update!(assigns, :class, &"my-button #{&1}"))
+  end
+end
+```
+
+The setting is read at runtime, so no recompile is needed. Most header
+actions (such as "Add CMS Page") are links passed into `content_header`'s
+`:action` slot, so they're styled with CSS or the header override rather
+than `button/1`.
+
 ---
 
 ### 5. Mount Admin Routes

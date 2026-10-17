@@ -69,8 +69,8 @@ defmodule DeadSimpleCms.MixProject do
       {:number, "~> 1.0.5"},
       # Only used to run this repo's own dev/test app (`start_app: true`); not required by host apps
       {:phoenix_live_dashboard, "~> 0.8.3 or ~> 0.9", only: :dev},
-      {:esbuild, "~> 0.10", only: :dev, runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", only: :dev, runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.10", only: [:dev, :test], runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3", only: [:dev, :test], runtime: Mix.env() == :dev},
       {:heroicons, github: "tailwindlabs/heroicons", tag: "v2.2.0", sparse: "optimized", app: false, compile: false, depth: 1, only: :dev},
       {:dns_cluster, "~> 0.2.0 or ~> 0.3", only: [:dev, :test]},
       {:bandit, "~> 1.5", only: [:dev, :test]},
