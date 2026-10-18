@@ -36,9 +36,20 @@ const EasyMDEHook = {
     }
 
     this.codemirror.on("change", this.onChange)
+
+    // An editor that starts inside a closed <details> is drawn at zero size, so redraw it when opened.
+    this.details = this.el.closest("details")
+    this.onToggle = () => {
+      if (this.details.open && this.codemirror) this.codemirror.refresh()
+    }
+    if (this.details) this.details.addEventListener("toggle", this.onToggle)
   },
 
   destroyed() {
+    if (this.details && this.onToggle) {
+      this.details.removeEventListener("toggle", this.onToggle)
+    }
+
     if (this.codemirror && this.onChange) {
       this.codemirror.off("change", this.onChange)
     }
@@ -52,6 +63,8 @@ const EasyMDEHook = {
     this.editorElement = null
     this.targetInput = null
     this.onChange = null
+    this.details = null
+    this.onToggle = null
   }
 }
 

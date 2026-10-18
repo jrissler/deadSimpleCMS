@@ -128,4 +128,107 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert html =~ "some updated title"
     end
   end
+
+  describe "Edit content area images" do
+    setup %{data: data} do
+      original_s3 = Application.get_env(:dead_simple_cms, :s3)
+      Application.put_env(:dead_simple_cms, :s3, bucket: "test-bucket", region: "us-east-1", access_key_id: "test-key", secret_access_key: "test-secret")
+
+      on_exit(fn ->
+        if original_s3,
+          do: Application.put_env(:dead_simple_cms, :s3, original_s3),
+          else: Application.delete_env(:dead_simple_cms, :s3)
+      end)
+
+      {:ok, image} = DeadSimpleCms.Cms.update_cms_image(data.cms_image, %{caption: "Placeholder: replace with a charter photo"})
+      %{data: %{data | cms_image: image}}
+    end
+
+    test "shows each area's current image and caption", %{conn: conn, data: data} do
+      {:ok, _form_live, html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      assert html =~ data.cms_image.url
+      assert html =~ "Placeholder: replace with a charter photo"
+      assert html =~ "Replace image"
+    end
+
+    test "uploading replaces the image on that area only", %{conn: conn, data: data} do
+      other_area = insert(:cms_content_area, cms_page_id: data.cms_page.id, cms_image_id: data.cms_image.id, cms_slot_id: data.cms_slot.id)
+      area = data.cms_content_area
+
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      upload = file_input(form_live, "#content-area-form-#{area.id}", String.to_atom("area_image_" <> area.id), [%{name: "sunset.jpg", content: "jpeg bytes", type: "image/jpeg"}])
+      assert render_upload(upload, "sunset.jpg") =~ "sunset.jpg"
+
+      html = form_live |> form("#content-area-form-#{area.id}") |> render_submit()
+      assert html =~ "Content area saved"
+
+      updated = DeadSimpleCms.Cms.get_cms_content_area!(area.id)
+      assert updated.cms_image.filename == "sunset.jpg"
+      assert updated.cms_image.url =~ ~r{^https://test-bucket\.s3\.amazonaws\.com/uploads/cms_images/.+/sunset\.jpg$}
+      assert html =~ updated.cms_image.url
+
+      assert DeadSimpleCms.Cms.get_cms_content_area!(other_area.id).cms_image_id == data.cms_image.id
+      assert DeadSimpleCms.Cms.get_cms_image!(data.cms_image.id).filename == data.cms_image.filename
+    end
+
+    test "removes an area's image", %{conn: conn, data: data} do
+      area = data.cms_content_area
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      html = form_live |> element("#content-area-#{area.id}-image button", "Remove image") |> render_click()
+
+      assert html =~ "Image removed"
+      assert DeadSimpleCms.Cms.get_cms_content_area!(area.id).cms_image_id == nil
+      assert has_element?(form_live, "#content-area-#{area.id}-image", "No image")
+    end
+  end
+
+  describe "Edit navigation" do
+    test "content areas start collapsed with a summary row each", %{conn: conn, data: data} do
+      area = data.cms_content_area
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      assert has_element?(form_live, "details#content-area-#{area.id}:not([open])")
+      assert has_element?(form_live, "#content-area-#{area.id}-summary", area.name)
+      assert has_element?(form_live, "#content-area-#{area.id}-summary", data.cms_slot.name)
+      assert has_element?(form_live, "#content-area-#{area.id}-summary", area.title)
+    end
+
+    test "the outline lists page settings, SEO and every content area", %{conn: conn, data: data} do
+      second = insert(:cms_content_area, cms_page_id: data.cms_page.id, cms_slot_id: data.cms_slot.id, name: "faq")
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      assert has_element?(form_live, "#cms-page-outline button", "Page settings")
+      assert has_element?(form_live, "#cms-page-outline button", "SEO")
+      assert has_element?(form_live, "#outline-#{data.cms_content_area.id}", data.cms_content_area.name)
+      assert has_element?(form_live, "#outline-#{second.id}", "faq")
+    end
+
+    test "an edited area is marked unsaved until it's saved", %{conn: conn, data: data} do
+      area = data.cms_content_area
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      refute has_element?(form_live, "#content-area-#{area.id}-summary", "Unsaved")
+
+      form_live |> form("#content-area-form-#{area.id}", cms_content_area: %{title: "A new title"}) |> render_change()
+      assert has_element?(form_live, "#content-area-#{area.id}-summary", "Unsaved")
+      assert has_element?(form_live, "#outline-#{area.id} [title='Unsaved changes']")
+
+      form_live |> form("#content-area-form-#{area.id}", cms_content_area: %{title: "A new title"}) |> render_submit()
+      refute has_element?(form_live, "#content-area-#{area.id}-summary", "Unsaved")
+      assert has_element?(form_live, "#content-area-#{area.id}-summary", "A new title")
+    end
+
+    test "a newly added area opens", %{conn: conn, data: data} do
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      form_live |> element("button", "Add Content Area") |> render_click()
+
+      new_area = DeadSimpleCms.Repo.get_by!(DeadSimpleCms.Cms.CmsContentArea, cms_page_id: data.cms_page.id, name: "New Content Area")
+      assert has_element?(form_live, "details#content-area-#{new_area.id}[open]")
+      assert has_element?(form_live, "details#content-area-#{data.cms_content_area.id}:not([open])")
+    end
+  end
 end
