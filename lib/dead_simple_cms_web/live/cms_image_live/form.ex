@@ -33,7 +33,7 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Form do
 
                   <div :if={@cms_image.url} class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                     <div class="flex items-start gap-4">
-                      <img src={@cms_image.url} alt={@cms_image.alt || ""} class="h-28 w-28 rounded-lg object-cover ring-1 ring-gray-300" />
+                      <img src={Cms.image_url(@cms_image)} alt={@cms_image.alt || ""} class="h-28 w-28 rounded-lg object-cover ring-1 ring-gray-300" />
                       <div class="flex-1 space-y-1">
                         <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">File name:</span> {@cms_image.filename}</p>
                         <p :if={file_type(@cms_image.content_type)} class="text-sm text-gray-700">

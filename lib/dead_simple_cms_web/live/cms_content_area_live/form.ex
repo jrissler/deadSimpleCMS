@@ -65,7 +65,7 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
 
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div class="shrink-0">
-                    <img :if={shown_image(@current_image, @remove_image)} src={shown_image(@current_image, @remove_image).url} alt={shown_image(@current_image, @remove_image).alt || ""} class="h-28 w-44 rounded-lg object-cover ring-1 ring-gray-300" />
+                    <img :if={shown_image(@current_image, @remove_image)} src={Cms.image_url(shown_image(@current_image, @remove_image))} alt={shown_image(@current_image, @remove_image).alt || ""} class="h-28 w-44 rounded-lg object-cover ring-1 ring-gray-300" />
                     <div :if={!shown_image(@current_image, @remove_image)} class="grid h-28 w-44 place-items-center rounded-lg bg-zinc-100 text-xs text-zinc-500 ring-1 ring-zinc-200">No image</div>
                     <p :if={shown_image(@current_image, @remove_image) && present(shown_image(@current_image, @remove_image).caption)} class="mt-2 max-w-44 text-xs text-zinc-500">{shown_image(@current_image, @remove_image).caption}</p>
                     <button

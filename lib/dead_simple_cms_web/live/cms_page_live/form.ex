@@ -74,7 +74,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                     <.input field={@form[:og_image_id]} type="select" label="Share image" options={[{"None", ""}] ++ Enum.map(@cms_images, &{image_label(&1), &1.id})} />
                     <.hint>Shown when the page is shared on social media or in messages.</.hint>
                   </div>
-                  <img :if={selected_image(@form, @cms_images)} src={selected_image(@form, @cms_images).url} alt="" class="h-20 w-32 rounded-lg object-cover ring-1 ring-zinc-200" />
+                  <img :if={selected_image(@form, @cms_images)} src={Cms.image_url(selected_image(@form, @cms_images))} alt="" class="h-20 w-32 rounded-lg object-cover ring-1 ring-zinc-200" />
                 </div>
 
                 <div>

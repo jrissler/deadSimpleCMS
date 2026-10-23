@@ -10,6 +10,7 @@ defmodule DeadSimpleCms.Cms do
   alias DeadSimpleCms.Cms.CmsPage
   alias DeadSimpleCms.Cms.CmsPageTemplate
   alias DeadSimpleCms.Cms.CmsSlot
+  alias DeadSimpleCms.Uploaders.S3Uploader
 
   defp repo, do: DeadSimpleCms.repo!()
 
@@ -162,10 +163,35 @@ defmodule DeadSimpleCms.Cms do
     %{
       title: presence(cms_page.meta_title) || cms_page.title,
       description: presence(cms_page.meta_description),
-      og_image_url: og_image && og_image.url,
+      og_image_url: image_url(og_image),
       og_image_alt: og_image && presence(og_image.alt),
       robots: if(cms_page.noindex, do: "noindex, follow", else: "index, follow")
     }
+  end
+
+  @doc """
+  Returns the URL to show an image at, or `nil` without an image.
+
+  With `config :dead_simple_cms, image_urls: :signed`, it's a presigned S3 GET
+  URL that expires after an hour, for private buckets. Otherwise (the default,
+  `:public`) it's the stored `url`, which needs a public bucket or CDN. An image
+  whose `url` isn't in the configured bucket is returned as stored.
+
+  ## Examples
+
+      iex> image_url(cms_image)
+      "https://bucket.s3.amazonaws.com/uploads/cms_images/.../hero.jpg"
+
+  """
+  def image_url(nil), do: nil
+
+  def image_url(%CmsImage{url: url}) do
+    with :signed <- Application.get_env(:dead_simple_cms, :image_urls, :public),
+         {:ok, signed_url} <- S3Uploader.generate_presigned_download_url(url) do
+      signed_url
+    else
+      _ -> url
+    end
   end
 
   defp presence(value) when is_binary(value), do: if(String.trim(value) == "", do: nil, else: value)

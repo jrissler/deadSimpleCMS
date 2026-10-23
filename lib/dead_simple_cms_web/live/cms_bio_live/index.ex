@@ -2,6 +2,7 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Index do
   @moduledoc "All bios, with photo, job title and whether each is shown on the site."
   use DeadSimpleCmsWeb, :live_view
 
+  alias DeadSimpleCms.Cms
   alias DeadSimpleCms.SpecialContent
 
   @impl true
@@ -24,7 +25,7 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Index do
     >
       <:col :let={{_id, cms_bio}} label="Person">
         <span class="flex items-center gap-3">
-          <img :if={cms_bio.cms_image} src={cms_bio.cms_image.url} alt="" class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-zinc-200" />
+          <img :if={cms_bio.cms_image} src={Cms.image_url(cms_bio.cms_image)} alt="" class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-zinc-200" />
           <span :if={!cms_bio.cms_image} class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200">
             <.icon name="hero-user" class="size-5" />
           </span>

@@ -2,6 +2,7 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Show do
   @moduledoc "A bio as a profile card: photo, name, job title, about, contact and social links."
   use DeadSimpleCmsWeb, :live_view
 
+  alias DeadSimpleCms.Cms
   alias DeadSimpleCms.SpecialContent
 
   @social [facebook: "Facebook", instagram: "Instagram", tik_tok: "TikTok", linked_in: "LinkedIn"]
@@ -24,7 +25,7 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Show do
       <div class="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8">
         <article id="bio-profile" class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
           <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
-            <img :if={@cms_bio.cms_image} src={@cms_bio.cms_image.url} alt={@cms_bio.cms_image.alt || @cms_bio.name} class="h-40 w-40 shrink-0 rounded-xl object-cover ring-1 ring-zinc-200" />
+            <img :if={@cms_bio.cms_image} src={Cms.image_url(@cms_bio.cms_image)} alt={@cms_bio.cms_image.alt || @cms_bio.name} class="h-40 w-40 shrink-0 rounded-xl object-cover ring-1 ring-zinc-200" />
             <div :if={!@cms_bio.cms_image} class="grid h-40 w-40 shrink-0 place-items-center rounded-xl bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200">
               <.icon name="hero-user" class="size-12" />
             </div>

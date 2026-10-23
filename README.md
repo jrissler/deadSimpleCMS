@@ -154,6 +154,9 @@ layout.
 Images are uploaded directly to S3 using presigned URLs.\
 The CMS stores metadata only.
 
+Show images with `DeadSimpleCms.Cms.image_url/1` rather than `url`, so the
+`image_urls` setting (public or signed, see below) applies.
+
 ---
 
 ### Special Content (`cms_bios`, `cms_testimonials`)
@@ -211,6 +214,15 @@ config :dead_simple_cms,
 - `s3.region`, `s3.access_key_id`, `s3.secret_access_key`: when omitted,
   your app's existing `config :ex_aws` settings are used. When given, they
   are written into the `:ex_aws` config (and so apply app-wide).
+- `image_urls`: `:public` (the default) or `:signed`.
+  - `:public`: uploads are sent as `public-read`, and `Cms.image_url/1` returns
+    the stored S3 URL. The bucket (or the `uploads/cms_images/` prefix) must
+    be publicly readable.
+  - `:signed`: for private buckets. Uploads aren't made public, and
+    `Cms.image_url/1` returns a presigned GET URL that lasts an hour. Each
+    render signs a fresh URL. Avoid caching rendered pages for longer than
+    that.
+  The admin UI and `page_seo/1`'s `og_image_url` both follow this setting.
 - `admin_layout`: read at compile time. After changing it, run
   `mix deps.compile dead_simple_cms --force`.
 - `admin_path`: the prefix you mount the admin routes under (for example
@@ -490,8 +502,10 @@ at itself:
 Build it from the slug, not the incoming request URL, so query strings and
 alternate hosts don't create duplicate canonicals.
 
-Social platforms fetch `og:image` anonymously. If your S3 bucket is private,
-use a public bucket or CDN for share images.
+Social platforms fetch `og:image` anonymously. With a private bucket, set
+`image_urls: :signed` so `og_image_url` is a presigned URL. Platforms that
+re-fetch an image later, after the URL expires, may lose it, so a public
+bucket or CDN is still best for share images.
 
 ### Sitemap
 

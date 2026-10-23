@@ -29,10 +29,10 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Show do
         <div class="space-y-6">
           <section aria-label="Image" class="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
             <div class="flex items-center justify-center rounded-xl bg-zinc-100">
-              <img id="cms-image-preview" src={@cms_image.url} alt={@cms_image.alt || ""} class="max-h-[36rem] w-auto max-w-full rounded-xl object-contain" />
+              <img id="cms-image-preview" src={Cms.image_url(@cms_image)} alt={@cms_image.alt || ""} class="max-h-[36rem] w-auto max-w-full rounded-xl object-contain" />
             </div>
             <p class="mt-3 text-right text-sm">
-              <.link href={@cms_image.url} target="_blank" rel="noopener" class="font-semibold text-zinc-700 hover:text-zinc-900">
+              <.link href={Cms.image_url(@cms_image)} target="_blank" rel="noopener" class="font-semibold text-zinc-700 hover:text-zinc-900">
                 Open full size <.icon name="hero-arrow-top-right-on-square" class="size-4" />
               </.link>
             </p>

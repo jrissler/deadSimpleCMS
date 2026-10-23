@@ -26,7 +26,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
           <ol :if={@cms_page.cms_content_areas != []} id="page-sections" class="mt-4 divide-y divide-zinc-100">
             <li :for={{area, index} <- Enum.with_index(@cms_page.cms_content_areas)} class="flex items-center gap-4 py-3">
               <span class="w-5 shrink-0 text-sm font-bold tabular-nums text-zinc-400">{index + 1}</span>
-              <img :if={area.cms_image} src={area.cms_image.url} alt="" class="h-10 w-14 shrink-0 rounded object-cover ring-1 ring-zinc-200" />
+              <img :if={area.cms_image} src={Cms.image_url(area.cms_image)} alt="" class="h-10 w-14 shrink-0 rounded object-cover ring-1 ring-zinc-200" />
               <div :if={!area.cms_image} class="h-10 w-14 shrink-0 rounded bg-zinc-100 ring-1 ring-zinc-200"></div>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-semibold text-zinc-900">{area.title || area.name}</p>
@@ -76,7 +76,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
               </div>
               <div :if={@cms_page.og_image}>
                 <dt class="text-zinc-500">Share image</dt>
-                <dd class="mt-1"><img src={@cms_page.og_image.url} alt={@cms_page.og_image.alt || ""} class="h-20 w-32 rounded-lg object-cover ring-1 ring-zinc-200" /></dd>
+                <dd class="mt-1"><img src={Cms.image_url(@cms_page.og_image)} alt={@cms_page.og_image.alt || ""} class="h-20 w-32 rounded-lg object-cover ring-1 ring-zinc-200" /></dd>
               </div>
               <div :if={@cms_page.noindex}>
                 <dd>

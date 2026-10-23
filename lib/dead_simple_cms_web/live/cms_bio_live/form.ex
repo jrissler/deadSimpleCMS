@@ -32,7 +32,7 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Form do
                 <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
                   <div id="bio-photo" class="shrink-0 sm:w-48">
                     <span class="label mb-1">Photo</span>
-                    <img :if={@current_image} src={@current_image.url} alt={@current_image.alt || ""} class="h-40 w-40 rounded-xl object-cover ring-1 ring-gray-300" />
+                    <img :if={@current_image} src={Cms.image_url(@current_image)} alt={@current_image.alt || ""} class="h-40 w-40 rounded-xl object-cover ring-1 ring-gray-300" />
                     <div :if={!@current_image && @uploads.image.entries == []} class="grid h-40 w-40 place-items-center rounded-xl bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200">
                       <.icon name="hero-user" class="size-12" />
                     </div>

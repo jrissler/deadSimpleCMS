@@ -27,7 +27,7 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Show do
           <h2 id="section-content-heading" class="text-base font-semibold text-zinc-900">Content</h2>
 
           <div :if={@area.cms_image} id="section-image">
-            <img src={@area.cms_image.url} alt={@area.cms_image.alt || ""} class="max-h-72 w-full rounded-lg object-cover ring-1 ring-zinc-200" />
+            <img src={Cms.image_url(@area.cms_image)} alt={@area.cms_image.alt || ""} class="max-h-72 w-full rounded-lg object-cover ring-1 ring-zinc-200" />
             <p class="mt-2 text-xs text-zinc-500">
               <span class="font-semibold text-zinc-700">Image description:</span> {present(@area.cms_image.alt) || "Not set. Add one so screen readers and search engines know what the photo shows."}
             </p>

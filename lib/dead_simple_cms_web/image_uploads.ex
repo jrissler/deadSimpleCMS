@@ -56,10 +56,18 @@ defmodule DeadSimpleCmsWeb.ImageUploads do
   def presign_upload(entry, socket) do
     case S3Uploader.generate_presigned_url(entry.client_name, entry.client_type) do
       {:ok, upload_url, public_url, key} ->
-        {:ok, %{uploader: "S3", url: upload_url, headers: %{"content-type" => entry.client_type, "x-amz-acl" => "public-read", "acl" => "public-read"}, fields: %{}, public_url: public_url, key: key}, socket}
+        {:ok, %{uploader: "S3", url: upload_url, headers: upload_headers(entry.client_type), fields: %{}, public_url: public_url, key: key}, socket}
 
       {:error, reason} ->
         {:error, reason, socket}
+    end
+  end
+
+  # Signed image URLs are for private buckets, so the object isn't made public-read.
+  defp upload_headers(content_type) do
+    case Application.get_env(:dead_simple_cms, :image_urls, :public) do
+      :signed -> %{"content-type" => content_type}
+      _public -> %{"content-type" => content_type, "x-amz-acl" => "public-read", "acl" => "public-read"}
     end
   end
 

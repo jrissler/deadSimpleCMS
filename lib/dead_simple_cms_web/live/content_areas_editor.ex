@@ -50,7 +50,7 @@ defmodule DeadSimpleCmsWeb.ContentAreasEditor do
           <summary id={"content-area-#{area.id}-summary"} class="flex cursor-pointer list-none items-center gap-4 px-5 py-4 hover:bg-zinc-50 focus:outline-none focus-visible:bg-zinc-50 [&::-webkit-details-marker]:hidden">
             <span class="w-6 shrink-0 text-sm font-bold tabular-nums text-zinc-400">{index + 1}</span>
 
-            <img :if={area.cms_image} src={area.cms_image.url} alt="" class="h-10 w-14 shrink-0 rounded object-cover ring-1 ring-zinc-200" />
+            <img :if={area.cms_image} src={Cms.image_url(area.cms_image)} alt="" class="h-10 w-14 shrink-0 rounded object-cover ring-1 ring-zinc-200" />
             <div :if={!area.cms_image} class="h-10 w-14 shrink-0 rounded bg-zinc-100 ring-1 ring-zinc-200"></div>
 
             <div class="min-w-0 flex-1">
@@ -101,7 +101,7 @@ defmodule DeadSimpleCmsWeb.ContentAreasEditor do
                   <span class="label mb-1">Image</span>
                   <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
                     <div class="shrink-0">
-                      <img :if={area.cms_image} src={area.cms_image.url} alt={area.cms_image.alt || ""} class="h-28 w-44 rounded-lg object-cover ring-1 ring-gray-300" />
+                      <img :if={area.cms_image} src={Cms.image_url(area.cms_image)} alt={area.cms_image.alt || ""} class="h-28 w-44 rounded-lg object-cover ring-1 ring-gray-300" />
                       <div :if={!area.cms_image} class="grid h-28 w-44 place-items-center rounded-lg bg-zinc-100 text-xs text-zinc-500 ring-1 ring-zinc-200">No image</div>
                       <p :if={area.cms_image && present(area.cms_image.caption)} class="mt-2 max-w-44 text-xs text-zinc-500">{area.cms_image.caption}</p>
                       <button

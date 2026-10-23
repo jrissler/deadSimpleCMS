@@ -28,7 +28,7 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Index do
       empty_description="Add your first image to use it in sections, bios and share images."
     >
       <:col :let={{_id, image}} label="Image">
-        <img src={image.url} alt="" loading="lazy" class="h-14 w-20 rounded-md object-cover ring-1 ring-zinc-200" />
+        <img src={Cms.image_url(image)} alt="" loading="lazy" class="h-14 w-20 rounded-md object-cover ring-1 ring-zinc-200" />
       </:col>
       <:col :let={{_id, image}} label="File and description">
         <span class="block max-w-sm truncate">{image.filename}</span>
