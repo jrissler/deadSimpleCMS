@@ -83,6 +83,28 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
       assert html =~ data.cms_page.title
     end
 
+    test "has no Preview Page button unless the host sets page_preview_url", %{conn: conn, data: data} do
+      {:ok, show_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}")
+      refute has_element?(show_live, "#cms-page-preview")
+
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+      refute has_element?(form_live, "#cms-page-preview")
+    end
+
+    test "links the show and edit screens to the host's preview, in a new tab", %{conn: conn, data: data} do
+      Application.put_env(:dead_simple_cms, :page_preview_url, "/preview/:slug")
+      on_exit(fn -> Application.delete_env(:dead_simple_cms, :page_preview_url) end)
+
+      {:ok, show_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}")
+      assert has_element?(show_live, "#cms-page-preview[href='/preview/#{data.cms_page.slug}'][target='_blank']", "Preview Page")
+
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+      assert has_element?(form_live, "#cms-page-preview[href='/preview/#{data.cms_page.slug}']")
+
+      {:ok, new_live, _html} = live(conn, ~p"/cms_pages/new")
+      refute has_element?(new_live, "#cms-page-preview")
+    end
+
     test "updates SEO fields from the edit form", %{conn: conn, data: data} do
       {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit?return_to=show")
 

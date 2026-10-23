@@ -12,6 +12,8 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
           <.icon name="hero-list-bullet" class="-ml-0.5 mr-1 h-5 w-5" /> View All
         </.link>
 
+        <.preview_page_link cms_page={@cms_page} class="mr-1" />
+
         <.link navigate={DeadSimpleCms.path("/cms_pages/#{@cms_page.id}/edit?return_to=show")} class="inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
           <.icon name="hero-pencil" class="-ml-0.5 mr-1 h-5 w-5" /> Edit Page
         </.link>

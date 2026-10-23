@@ -714,6 +714,32 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Opens the host's full-page preview of a CMS page in a new tab. Renders
+  nothing unless `config :dead_simple_cms, page_preview_url:` is set. See
+  `DeadSimpleCms.page_preview_url/1`.
+  """
+  attr :cms_page, :map, required: true
+  attr :class, :any, default: nil
+
+  def preview_page_link(assigns) do
+    assigns = assign(assigns, :url, DeadSimpleCms.page_preview_url(assigns.cms_page))
+
+    ~H"""
+    <a
+      :if={@url}
+      id="cms-page-preview"
+      href={@url}
+      target="_blank"
+      rel="noopener"
+      title="Opens the whole page as it will look on the site. It shows saved content, so save first."
+      class={["inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500", @class]}
+    >
+      <.icon name="hero-eye" class="-ml-0.5 mr-1 h-5 w-5" /> Preview Page
+    </a>
+    """
+  end
+
   # Calls the host's override from `config :dead_simple_cms, :admin_components`
   # when it defines `name/1`, otherwise the built-in `default` markup.
   defp render_admin_component(name, assigns, default) do
