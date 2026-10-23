@@ -1,0 +1,11 @@
+defmodule <%= @app_module %>.Repo.Migrations.AddSharedToCmsContentAreas do
+  use Ecto.Migration
+
+  # A template's shared content areas render on every page that uses the
+  # template; the rest are starter sections copied into new pages.
+  def change do
+    alter table(:cms_content_areas) do
+      add :shared, :boolean, null: false, default: false
+    end
+  end
+end

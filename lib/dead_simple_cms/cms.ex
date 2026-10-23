@@ -53,15 +53,70 @@ defmodule DeadSimpleCms.Cms do
   - Only pages with `published == true` are returned
   - Only content areas with `visible == true` are preloaded
   - Content areas are ordered by `position` ascending
+  - The page template, when set, is preloaded with its visible *shared*
+    content areas, so a host can render them as blocks on every page that
+    uses the template
   - Returns `nil` if no published page exists for the given slug
 
   Layout, grouping, and presentation decisions remain the responsibility of the host application.
   """
   def get_published_page_by_slug(slug) do
+    from(p in CmsPage, where: p.slug == ^slug and p.published == true, preload: ^public_page_preloads())
+    |> repo().one()
+  end
+
+  @doc """
+  Returns a CMS page by slug, published or not, with the same preloads as
+  `get_published_page_by_slug/1`. For a host's full-page preview route (see
+  `DeadSimpleCms.page_preview_url/1`), which must sit behind the host's own
+  authentication. Returns `nil` if no page has the slug.
+  """
+  def get_preview_page_by_slug(slug) do
+    from(p in CmsPage, where: p.slug == ^slug, preload: ^public_page_preloads())
+    |> repo().one()
+  end
+
+  defp public_page_preloads do
     visible_areas_query = from(a in CmsContentArea, where: a.visible == true, order_by: [asc: a.position], preload: [:cms_image, :cms_slot])
 
-    from(p in CmsPage, where: p.slug == ^slug and p.published == true, preload: [:og_image, cms_content_areas: ^visible_areas_query])
-    |> repo().one()
+    shared_areas_query = from(a in visible_areas_query, where: a.shared == true)
+
+    [:og_image, cms_content_areas: visible_areas_query, cms_page_template: [cms_content_areas: shared_areas_query]]
+  end
+
+  @doc """
+  Copies a page template's content areas into a page, as starter sections
+  that are then edited independently of the template.
+
+  Copies name, slot, position, title, subtitle, body, image and visibility.
+  Skips the template's shared areas, which render on every page instead.
+  Does nothing when the page has no template or already has content areas,
+  so it is safe to call after every create. Returns the number of areas
+  copied.
+  """
+  def copy_template_areas_to_page(%CmsPage{cms_page_template_id: nil}), do: {:ok, 0}
+
+  def copy_template_areas_to_page(%CmsPage{id: page_id, cms_page_template_id: template_id}) do
+    if repo().exists?(from(a in CmsContentArea, where: a.cms_page_id == ^page_id)) do
+      {:ok, 0}
+    else
+      template_areas = repo().all(from(a in CmsContentArea, where: a.cms_page_template_id == ^template_id and a.shared == false, order_by: [asc: a.position]))
+
+      repo().transaction(fn ->
+        Enum.each(template_areas, fn area ->
+          area
+          |> Map.take([:name, :cms_slot_id, :position, :title, :subtitle, :body_md, :cms_image_id, :visible])
+          |> Map.put(:cms_page_id, page_id)
+          |> create_cms_content_area()
+          |> case do
+            {:ok, _} -> :ok
+            {:error, changeset} -> repo().rollback(changeset)
+          end
+        end)
+
+        length(template_areas)
+      end)
+    end
   end
 
   @doc """

@@ -22,7 +22,54 @@ defmodule DeadSimpleCms.CmsTest do
     end
 
     test "get_published_page_by_slug/1 returns the cms_page with given slug", %{data: data} do
-      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, [:og_image, cms_content_areas: [:cms_image, :cms_slot]])
+      assert Cms.get_published_page_by_slug(data.cms_page.slug) == Repo.preload(data.cms_page, [:og_image, cms_content_areas: [:cms_image, :cms_slot], cms_page_template: [cms_content_areas: [:cms_image, :cms_slot]]])
+    end
+
+    test "get_published_page_by_slug/1 preloads the template's visible shared areas", %{data: data} do
+      shared = insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "follow_along", shared: true)
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "hidden", shared: true, visible: false)
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "starter")
+
+      page = Cms.get_published_page_by_slug(data.cms_page.slug)
+
+      assert Enum.map(page.cms_page_template.cms_content_areas, & &1.id) == [shared.id]
+      assert Enum.map(page.cms_content_areas, & &1.id) == [data.cms_content_area.id]
+    end
+
+    test "get_preview_page_by_slug/1 includes unpublished pages", %{data: data} do
+      draft = insert(:cms_page, published: false)
+
+      assert Cms.get_published_page_by_slug(draft.slug) == nil
+      assert %CmsPage{id: id, cms_content_areas: [], cms_page_template: nil} = Cms.get_preview_page_by_slug(draft.slug)
+      assert id == draft.id
+      assert Cms.get_preview_page_by_slug(data.cms_page.slug).id == data.cms_page.id
+      assert Cms.get_preview_page_by_slug("no-such-page") == nil
+    end
+
+    test "copy_template_areas_to_page/1 gives a new page the template's sections", %{data: data} do
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, cms_image_id: data.cms_image.id, name: "hero", position: 0, title: "Hero")
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "story", position: 1, title: "Story", visible: false)
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "follow_along", position: 2, shared: true)
+      page = insert(:cms_page, cms_page_template_id: data.cms_page_template.id)
+
+      assert {:ok, 2} = Cms.copy_template_areas_to_page(page)
+
+      areas = Cms.get_cms_page!(page.id).cms_content_areas
+      assert Enum.map(areas, &{&1.name, &1.position, &1.title, &1.visible}) == [{"hero", 0, "Hero", true}, {"story", 1, "Story", false}]
+      assert hd(areas).cms_image_id == data.cms_image.id
+      assert Enum.all?(areas, &is_nil(&1.cms_page_template_id))
+
+      # Shared areas aren't copied; the template keeps its own sections; a second call doesn't duplicate them.
+      assert length(Cms.get_cms_page_template!(data.cms_page_template.id).cms_content_areas) == 3
+      assert {:ok, 0} = Cms.copy_template_areas_to_page(page)
+    end
+
+    test "copy_template_areas_to_page/1 skips pages without a template or with sections already", %{data: data} do
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "hero")
+
+      assert {:ok, 0} = Cms.copy_template_areas_to_page(insert(:cms_page, cms_page_template_id: nil))
+      assert {:ok, 0} = Cms.copy_template_areas_to_page(data.cms_page)
+      assert [_] = Cms.get_cms_page!(data.cms_page.id).cms_content_areas
     end
 
     test "create_cms_page/1 with valid data creates a cms_page" do

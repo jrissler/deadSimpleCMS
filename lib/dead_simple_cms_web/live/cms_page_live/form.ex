@@ -52,7 +52,10 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                     <.input field={@form[:title]} type="text" label="Title" />
                     <.input field={@form[:published]} type="checkbox" label="Published" />
                     <.input field={@form[:published_at]} type="datetime-local" label="Published at" />
-                    <.input field={@form[:cms_page_template_id]} type="select" label="Page Template (Optional)" options={[{"Select a template", nil}] ++ Enum.map(@cms_page_templates, &{&1.name, &1.id})} />
+                    <div>
+                      <.input field={@form[:cms_page_template_id]} type="select" label="Page Template (Optional)" options={[{"Select a template", nil}] ++ Enum.map(@cms_page_templates, &{&1.name, &1.id})} />
+                      <p :if={@live_action == :new} class="mt-1 text-xs text-gray-500">A new page starts with a copy of the template's sections.</p>
+                    </div>
                   </div>
 
                   <div class="border-t border-zinc-200 pt-6">
@@ -145,7 +148,10 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
 
                           <div class="grid grid-cols-1 gap-4">
                             <.input field={@area_forms[area.id][:name]} id={"content-area-#{area.id}-name"} type="text" label="Name" />
-                            <.input field={@area_forms[area.id][:cms_slot_id]} id={"content-area-#{area.id}-cms-slot-id"} type="select" label="Slot" options={[{"Select a slot", nil}] ++ Enum.map(@cms_slots, &{&1.name, &1.id})} />
+                            <div>
+                              <.input field={@area_forms[area.id][:cms_slot_id]} id={"content-area-#{area.id}-cms-slot-id"} type="select" label="Slot" options={[{"Select a slot", nil}] ++ Enum.map(@cms_slots, &{&1.name, &1.id})} />
+                              <p :if={slot_description(@area_forms[area.id], @cms_slots)} id={"content-area-#{area.id}-slot-help"} class="mt-1 whitespace-pre-line text-xs text-gray-500">{slot_description(@area_forms[area.id], @cms_slots)}</p>
+                            </div>
                             <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
                             <.input field={@area_forms[area.id][:position]} id={"content-area-#{area.id}-position"} type="number" label="Position" />
                             <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
@@ -323,6 +329,12 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
   defp slot_name(%{cms_slot: %{name: name}}, _cms_slots), do: name
   defp slot_name(%{cms_slot_id: id}, cms_slots), do: Enum.find_value(cms_slots, &(&1.id == id && &1.name))
 
+  # The selected slot's description, shown as help text (for example, how to format its body).
+  defp slot_description(form, cms_slots) do
+    id = form && Phoenix.HTML.Form.input_value(form, :cms_slot_id)
+    Enum.find_value(cms_slots, &(to_string(&1.id) == to_string(id) && &1.description not in [nil, ""] && &1.description))
+  end
+
   # Images can carry a note like "Placeholder: replace with..." in their caption.
   defp placeholder_image?(%{cms_image: %{caption: caption}}) when is_binary(caption), do: caption =~ ~r/placeholder/i
   defp placeholder_image?(_area), do: false
@@ -403,7 +415,13 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
   defp save_cms_page(socket, :new, cms_page_params) do
     case Cms.create_cms_page(cms_page_params) do
       {:ok, cms_page} ->
-        {:noreply, socket |> put_flash(:info, "Cms page created successfully") |> push_navigate(to: return_path(socket.assigns.return_to, cms_page))}
+        socket =
+          case Cms.copy_template_areas_to_page(cms_page) do
+            {:ok, _copied} -> put_flash(socket, :info, "Cms page created successfully")
+            {:error, _area_changeset} -> put_flash(socket, :error, "Page created, but its template's sections couldn't be copied")
+          end
+
+        {:noreply, push_navigate(socket, to: return_path(socket.assigns.return_to, cms_page))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}

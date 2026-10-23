@@ -55,6 +55,7 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
                         <div class="mt-1 text-sm text-zinc-600">
                           position: {area.position} • visible: {area.visible}
                           {if area.cms_slot_id, do: " • slot", else: ""}
+                          {if area.shared, do: " • shared on every page", else: " • starter section"}
                         </div>
                       </div>
                     </div>
@@ -67,6 +68,10 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
                           <.input field={@area_forms[area.id][:name]} id={"content-area-#{area.id}-name"} type="text" label="Name" />
                           <.input field={@area_forms[area.id][:cms_slot_id]} id={"content-area-#{area.id}-cms-slot-id"} type="select" label="Slot" options={[{"Select a slot", nil}] ++ Enum.map(@cms_slots, &{&1.name, &1.id})} />
                           <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
+                          <div>
+                            <.input field={@area_forms[area.id][:shared]} id={"content-area-#{area.id}-shared"} type="checkbox" label="Shared on every page" />
+                            <p class="mt-1 text-xs text-gray-500">Shared sections show on every page that uses this template. Unchecked sections are starters, copied into each new page to edit there.</p>
+                          </div>
                           <.input field={@area_forms[area.id][:position]} id={"content-area-#{area.id}-position"} type="number" label="Position" />
                           <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
                           <.input field={@area_forms[area.id][:subtitle]} id={"content-area-#{area.id}-subtitle"} type="text" label="Subtitle" />

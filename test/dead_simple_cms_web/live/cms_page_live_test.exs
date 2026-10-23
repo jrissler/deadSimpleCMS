@@ -207,6 +207,33 @@ defmodule DeadSimpleCmsWeb.CmsPageLiveTest do
     end
   end
 
+  describe "Templates and slot help" do
+    test "a page created from a template starts with the template's sections", %{conn: conn, data: data} do
+      insert(:cms_content_area, cms_page_template_id: data.cms_page_template.id, cms_slot_id: data.cms_slot.id, name: "hero", position: 0, title: "Starter hero")
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/new")
+
+      assert has_element?(form_live, "#cms_page-form", "starts with a copy of the template's sections")
+
+      {:ok, _index, html} =
+        form_live
+        |> form("#cms_page-form", cms_page: params_for(:cms_page, slug: "from-template", title: "From template", cms_page_template_id: data.cms_page_template.id))
+        |> render_submit()
+        |> follow_redirect(conn, ~p"/cms_pages")
+
+      assert html =~ "Cms page created successfully"
+      page = DeadSimpleCms.Cms.get_preview_page_by_slug("from-template")
+      assert Enum.map(page.cms_content_areas, & &1.title) == ["Starter hero"]
+    end
+
+    test "each section shows its slot's description as help text", %{conn: conn, data: data} do
+      {:ok, _} = DeadSimpleCms.Cms.update_cms_slot(data.cms_slot, %{description: "One fact per line: 15,000+ | nautical miles"})
+      area = data.cms_content_area
+      {:ok, form_live, _html} = live(conn, ~p"/cms_pages/#{data.cms_page}/edit")
+
+      assert has_element?(form_live, "#content-area-#{area.id}-slot-help", "One fact per line")
+    end
+  end
+
   describe "Edit navigation" do
     test "content areas start collapsed with a summary row each", %{conn: conn, data: data} do
       area = data.cms_content_area

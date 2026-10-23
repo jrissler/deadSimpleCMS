@@ -76,7 +76,9 @@ SEO fields (all optional):
 - `og_image_id`: a `cms_images` record used as the social share image
 
 Public reads should go through `get_published_page_by_slug/1`, which only
-returns published pages.
+returns published pages. A host's full-page preview route (behind its own
+authentication) can use `get_preview_page_by_slug/1`, which has the same
+preloads but includes unpublished pages.
 
 ---
 
@@ -88,6 +90,8 @@ returns published pages.
 - Ordered via `position` (integer)
 - `name` (scoped per page)
 - Optional `visible` flag
+- `shared` flag, for template areas: render on every page using the
+  template instead of being copied into new pages
 - Structured fields (`title`, `subtitle`, `body_md`)
 - Optional image (`cms_image_id`)
 
@@ -104,6 +108,10 @@ A slot tells the host app **which component renders a content area**.
 The host matches on `area.cms_slot.key` (for example `"hero"`, `"faq"`,
 `"standard_content"`). The install migrations seed a `standard_content` slot.
 
+The slot's `description` is shown as help text under the slot picker in
+the page editor, so use it to tell editors what the slot needs (for
+example, "One fact per line: 15,000+ | nautical miles").
+
 ---
 
 ### CMS Page Templates (`cms_page_templates`)
@@ -111,7 +119,22 @@ The host matches on `area.cms_slot.key` (for example `"hero"`, `"faq"`,
 - `key`, `name`, `description`
 
 A template groups content areas that define a page's shape. Pages may
-optionally reference a template.
+optionally reference a template. Template content areas do two jobs:
+
+- **Starter sections** (`shared` unchecked). A page created in the admin
+  with a template gets a copy of these (`copy_template_areas_to_page/1`).
+  The copies are the page's own and are edited independently.
+- **Shared blocks** (`shared` checked). Not copied. Instead,
+  `get_published_page_by_slug/1` preloads the template with its visible
+  shared areas, so the host can render them on every page that uses the
+  template (a closing call to action, for example). Edit the block once on
+  the template and every page shows the change.
+
+Upgrading: run `mix dead_simple_cms.install` again to copy the new
+`add_shared_to_cms_content_areas` migration, then `mix ecto.migrate`.
+
+The host can also match on `page.cms_page_template.key` to choose a page
+layout.
 
 ---
 

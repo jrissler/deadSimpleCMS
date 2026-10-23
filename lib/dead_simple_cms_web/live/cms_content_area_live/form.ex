@@ -31,6 +31,9 @@ defmodule DeadSimpleCmsWeb.CmsContentAreaLive.Form do
             <div class="pt-1">
               <.input field={@form[:visible]} type="checkbox" label="Visible" />
             </div>
+            <div>
+              <.input field={@form[:shared]} type="checkbox" label="Shared on every page (template sections only)" />
+            </div>
           </div>
 
           <div class="border-t border-gray-200 pt-8">
