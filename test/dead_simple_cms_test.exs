@@ -55,4 +55,24 @@ defmodule DeadSimpleCmsTest do
       assert_raise ArgumentError, ~r/bucket/, fn -> DeadSimpleCms.ensure_ex_aws_configured() end
     end
   end
+
+  describe "page_preview_url/1" do
+    setup do
+      on_exit(fn -> Application.delete_env(:dead_simple_cms, :page_preview_url) end)
+    end
+
+    test "fills :slug and :id into the host's template" do
+      Application.put_env(:dead_simple_cms, :page_preview_url, "https://example.com/preview/:slug?page=:id")
+
+      assert DeadSimpleCms.page_preview_url(%{slug: "about", id: "abc"}) == "https://example.com/preview/about?page=abc"
+    end
+
+    test "is nil when the setting is absent or the page has no slug yet" do
+      assert DeadSimpleCms.page_preview_url(%{slug: "about", id: "abc"}) == nil
+
+      Application.put_env(:dead_simple_cms, :page_preview_url, "/preview/:slug")
+      assert DeadSimpleCms.page_preview_url(%{slug: nil, id: nil}) == nil
+      assert DeadSimpleCms.page_preview_url(%{slug: "", id: nil}) == nil
+    end
+  end
 end

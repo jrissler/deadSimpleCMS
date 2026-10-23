@@ -191,6 +191,12 @@ config :dead_simple_cms,
 - `preview_components`: a module exporting `cms_content_slot/1`. When set,
   the page editor renders a live preview of each content area using your
   own components.
+- `page_preview_url`: a URL template for your app's full-page preview, such
+  as `"/preview/:slug"` (`:slug` and `:id` are filled in). When set, the page
+  editor and page screens show a "Preview Page" button that opens it in a new
+  tab. The route is yours: render the page with your public layout, include
+  unpublished pages, and put it behind your own authentication. The preview
+  shows saved content, so save before previewing.
 
 ---
 
