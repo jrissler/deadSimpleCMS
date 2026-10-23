@@ -139,7 +139,7 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
                       <div class="border-t border-zinc-200 p-6 sm:p-8">
                         <%= if preview_enabled?() and function_exported?(preview_component_module(), :cms_content_slot, 1) do %>
                           <div class="mb-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-6">
-                            {apply(preview_component_module(), :cms_content_slot, [%{content_area: preview_area(area, @area_forms[area.id], @cms_slots)}])}
+                            {apply(preview_component_module(), :cms_content_slot, [preview_assigns(area, @area_forms[area.id], @cms_slots)])}
                           </div>
                         <% end %>
 
@@ -440,6 +440,10 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Form do
   defp preview_enabled? do
     match?(module when is_atom(module), preview_component_module())
   end
+
+  # Called directly rather than through HEEx, so build the assigns a function
+  # component expects: `__changed__` lets the host's component use assign/3.
+  defp preview_assigns(area, form, cms_slots), do: %{__changed__: nil, content_area: preview_area(area, form, cms_slots)}
 
   defp preview_area(area, nil, _cms_slots), do: area
 
