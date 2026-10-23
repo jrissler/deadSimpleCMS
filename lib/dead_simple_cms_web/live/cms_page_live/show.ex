@@ -1,4 +1,5 @@
 defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
+  @moduledoc "A page at a glance: its status, search details and sections, with links to edit and preview."
   use DeadSimpleCmsWeb, :live_view
 
   alias DeadSimpleCms.Cms
@@ -6,66 +7,85 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <.content_header main_title="Viewing CMS Page" sub_title={@cms_page.title} description="This page represents a top-level route and owns ordered content areas.">
+    <.content_header main_title={@cms_page.title} sub_title="Page" description={"/#{@cms_page.slug}"}>
       <:action>
-        <.link navigate={DeadSimpleCms.path("/cms_pages")} class="inline-flex mr-1 items-center justify-center rounded-md border border-gray-300 bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500">
-          <.icon name="hero-list-bullet" class="-ml-0.5 mr-1 h-5 w-5" /> View All
-        </.link>
-
-        <.preview_page_link cms_page={@cms_page} class="mr-1" />
-
-        <.link navigate={DeadSimpleCms.path("/cms_pages/#{@cms_page.id}/edit?return_to=show")} class="inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-          <.icon name="hero-pencil" class="-ml-0.5 mr-1 h-5 w-5" /> Edit Page
-        </.link>
+        <.button navigate={DeadSimpleCms.path("/cms_pages")}>
+          <.icon name="hero-arrow-left" class="size-4" /> All pages
+        </.button>
+        <.preview_page_link cms_page={@cms_page} />
+        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_pages/#{@cms_page.id}/edit")}>
+          <.icon name="hero-pencil" class="size-4" /> Edit page
+        </.button>
       </:action>
     </.content_header>
 
-    <main class="pt-2 pb-16 mt-0 bg-white">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="px-4 sm:px-0">
-          <section aria-labelledby="cms-page-details-heading">
-            <.non_list_table object_name="cms_page" headers={["Field", "Value"]}>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Title</td>
-                <td class="data-table-td text-sm text-gray-500">{@cms_page.title}</td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Slug</td>
-                <td class="data-table-td text-sm text-gray-500">{@cms_page.slug}</td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Published</td>
-                <td class="data-table-td text-sm text-gray-500">
-                  {(@cms_page.published && "Yes") || "No"}
-                </td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Published At</td>
-                <td class="data-table-td text-sm text-gray-500">
-                  {@cms_page.published_at && Calendar.strftime(@cms_page.published_at, "%Y-%m-%d")}
-                </td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Meta Title</td>
-                <td class="data-table-td text-sm text-gray-500">{@cms_page.meta_title}</td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Meta Description</td>
-                <td class="data-table-td text-sm text-gray-500">{@cms_page.meta_description}</td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Social Share Image</td>
-                <td class="data-table-td text-sm text-gray-500">
-                  <img :if={@cms_page.og_image} src={@cms_page.og_image.url} alt={@cms_page.og_image.alt || ""} class="h-16 w-28 object-cover rounded ring-1 ring-gray-300" />
-                </td>
-              </:row>
-              <:row>
-                <td class="data-table-td text-sm text-gray-500">Noindex</td>
-                <td class="data-table-td text-sm text-gray-500">{(@cms_page.noindex && "Yes") || "No"}</td>
-              </:row>
-            </.non_list_table>
-          </section>
-        </div>
+    <main class="pt-2 pb-16 mt-0">
+      <div class="mx-auto grid max-w-5xl gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8">
+        <section aria-labelledby="page-sections-heading" class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 id="page-sections-heading" class="text-base font-semibold text-zinc-900">Sections</h2>
+          <ol :if={@cms_page.cms_content_areas != []} id="page-sections" class="mt-4 divide-y divide-zinc-100">
+            <li :for={{area, index} <- Enum.with_index(@cms_page.cms_content_areas)} class="flex items-center gap-4 py-3">
+              <span class="w-5 shrink-0 text-sm font-bold tabular-nums text-zinc-400">{index + 1}</span>
+              <img :if={area.cms_image} src={area.cms_image.url} alt="" class="h-10 w-14 shrink-0 rounded object-cover ring-1 ring-zinc-200" />
+              <div :if={!area.cms_image} class="h-10 w-14 shrink-0 rounded bg-zinc-100 ring-1 ring-zinc-200"></div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-zinc-900">{area.title || area.name}</p>
+                <p :if={area.cms_slot} class="text-xs text-zinc-500">{area.cms_slot.name}</p>
+              </div>
+              <.status_badge :if={!area.visible} tone={:dark}>Hidden</.status_badge>
+            </li>
+          </ol>
+          <p :if={@cms_page.cms_content_areas == []} class="mt-4 text-sm text-zinc-500">No sections yet. Edit the page to add some.</p>
+        </section>
+
+        <aside class="space-y-6">
+          <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h2 class="text-base font-semibold text-zinc-900">Status</h2>
+            <dl class="mt-4 space-y-3 text-sm">
+              <div>
+                <dt class="text-zinc-500">Visibility</dt>
+                <dd class="mt-1">
+                  <.status_badge tone={if @cms_page.published, do: :good, else: :muted}>{if @cms_page.published, do: "Live", else: "Draft"}</.status_badge>
+                </dd>
+              </div>
+              <div :if={@cms_page.published_at}>
+                <dt class="text-zinc-500">Publish date</dt>
+                <dd class="mt-1 text-zinc-900">{friendly_date(@cms_page.published_at)}</dd>
+              </div>
+              <div>
+                <dt class="text-zinc-500">Template</dt>
+                <dd class="mt-1 text-zinc-900">{(@cms_page.cms_page_template && @cms_page.cms_page_template.name) || "None"}</dd>
+              </div>
+              <div>
+                <dt class="text-zinc-500">Last updated</dt>
+                <dd class="mt-1 text-zinc-900">{friendly_date(@cms_page.updated_at)}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <h2 class="text-base font-semibold text-zinc-900">Search and sharing</h2>
+            <dl class="mt-4 space-y-3 text-sm">
+              <div>
+                <dt class="text-zinc-500">Search title</dt>
+                <dd class="mt-1 text-zinc-900">{@cms_page.meta_title || @cms_page.title}</dd>
+              </div>
+              <div>
+                <dt class="text-zinc-500">Search description</dt>
+                <dd class="mt-1 text-zinc-900">{@cms_page.meta_description || "Not set"}</dd>
+              </div>
+              <div :if={@cms_page.og_image}>
+                <dt class="text-zinc-500">Share image</dt>
+                <dd class="mt-1"><img src={@cms_page.og_image.url} alt={@cms_page.og_image.alt || ""} class="h-20 w-32 rounded-lg object-cover ring-1 ring-zinc-200" /></dd>
+              </div>
+              <div :if={@cms_page.noindex}>
+                <dd>
+                  <.status_badge tone={:warning}>Hidden from search engines</.status_badge>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </aside>
       </div>
     </main>
     """
@@ -73,9 +93,8 @@ defmodule DeadSimpleCmsWeb.CmsPageLive.Show do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:page_title, "CMS Page Details")
-     |> assign(:cms_page, Cms.get_cms_page!(id))}
+    cms_page = id |> Cms.get_cms_page!() |> DeadSimpleCms.repo!().preload(:cms_page_template)
+
+    {:ok, socket |> assign(:page_title, cms_page.title) |> assign(:cms_page, cms_page)}
   end
 end

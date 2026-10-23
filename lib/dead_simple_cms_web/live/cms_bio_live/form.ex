@@ -1,118 +1,151 @@
 defmodule DeadSimpleCmsWeb.CmsBioLive.Form do
+  @moduledoc "Create or edit a bio: photo, name and job title first, then About, Contact and Social."
   use DeadSimpleCmsWeb, :live_view
 
   alias DeadSimpleCms.Cms
   alias DeadSimpleCms.SpecialContent
   alias DeadSimpleCms.SpecialContent.CmsBio
-  alias DeadSimpleCms.Uploaders.S3Uploader
+  alias DeadSimpleCmsWeb.ImageUploads
 
   @impl true
   def render(assigns) do
     ~H"""
-    <.content_header main_title={@page_title} sub_title="Admin" description="Bios represent standalone profile content with their own paths." icon_class="hero-plus">
+    <.content_header main_title={@page_title} sub_title={@live_action == :edit && @cms_bio.name} description="A person's profile: who they are, what they do and how to reach them.">
       <:action>
-        <.link patch={DeadSimpleCms.path("/cms_bios")} class="flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-          <.icon name="hero-pencil" class="-ml-0.5 mr-1 h-5 w-5" /> All CMS Bios
-        </.link>
+        <.button navigate={DeadSimpleCms.path("/cms_bios")}>
+          <.icon name="hero-arrow-left" class="size-4" /> All bios
+        </.button>
+        <.button :if={@live_action == :edit} navigate={DeadSimpleCms.path("/cms_bios/#{@cms_bio.id}")}>
+          <.icon name="hero-eye" class="size-4" /> View bio
+        </.button>
       </:action>
     </.content_header>
 
     <main class="pt-2 pb-16 mt-0">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="px-4 sm:px-0 space-y-10">
-          <section aria-labelledby="cms-bio-form-heading">
-            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-              <.form for={@form} id="cms_bio-form" phx-change="validate" phx-submit="save" class="p-6 sm:p-8">
-                <div class="space-y-8">
-                  <div class="grid grid-cols-1 gap-6">
-                    <.input field={@form[:cms_image_id]} type="hidden" />
+      <div class="mx-auto max-w-5xl space-y-10 px-4 sm:px-6 lg:px-8">
+        <section aria-labelledby="bio-person-heading">
+          <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+            <.form for={@form} id="cms_bio-form" phx-change="validate" phx-submit="save" class="space-y-8 p-6 sm:p-8">
+              <div class="space-y-5">
+                <h2 id="bio-person-heading" class="text-lg font-semibold tracking-tight text-gray-900">Person</h2>
+
+                <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
+                  <div id="bio-photo" class="shrink-0 sm:w-48">
+                    <span class="label mb-1">Photo</span>
+                    <img :if={@current_image} src={@current_image.url} alt={@current_image.alt || ""} class="h-40 w-40 rounded-xl object-cover ring-1 ring-gray-300" />
+                    <div :if={!@current_image && @uploads.image.entries == []} class="grid h-40 w-40 place-items-center rounded-xl bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200">
+                      <.icon name="hero-user" class="size-12" />
+                    </div>
+
+                    <div :for={entry <- @uploads.image.entries} class="mt-2 space-y-2">
+                      <.live_img_preview :if={!@current_image} entry={entry} class="h-40 w-40 rounded-xl object-cover ring-1 ring-gray-300" />
+                      <div class="flex items-center gap-2">
+                        <p class="min-w-0 flex-1 truncate text-xs text-gray-600">{if @current_image, do: "New photo: "}{entry.client_name}</p>
+                        <button type="button" phx-click="cancel-upload" phx-value-ref={entry.ref} class="text-lg font-bold leading-none text-red-500 hover:text-red-700" aria-label="Cancel upload">&times;</button>
+                      </div>
+                      <progress value={entry.progress} max="100" class="h-2 w-full rounded-lg bg-blue-100">{entry.progress}%</progress>
+                      <p :for={err <- upload_errors(@uploads.image, entry)} class="text-xs text-red-500">{ImageUploads.error_to_string(err)}</p>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <label for={@uploads.image.ref} class="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        <.icon name="hero-arrow-up-tray" class="size-4 text-gray-500" /> {if @current_image, do: "Replace photo", else: "Add photo"}
+                      </label>
+                      <button
+                        :if={@current_image}
+                        type="button"
+                        id="remove-bio-photo"
+                        phx-click="remove-photo"
+                        data-confirm="Take the photo off this bio? The photo stays in your image library."
+                        class="text-sm font-semibold text-red-600 hover:text-red-500"
+                      >
+                        Remove photo
+                      </button>
+                    </div>
+                    <.live_file_input upload={@uploads.image} class="sr-only" />
+                    <div class="phx-drop-target" phx-drop-target={@uploads.image.ref}>
+                      <.hint>Or drop a file here. {ImageUploads.accepted_formats()}. A square photo works best. It's added when you save.</.hint>
+                    </div>
+                    <p :for={err <- upload_errors(@uploads.image)} class="mt-1 text-xs text-red-500">{ImageUploads.error_to_string(err)}</p>
+                  </div>
+
+                  <div class="min-w-0 flex-1 space-y-5">
                     <.input field={@form[:name]} type="text" label="Name" />
-                    <.input field={@form[:job_title]} type="text" label="Job Title" />
-                    <.input field={@form[:tag_line]} type="text" label="Tag Line" />
-                    <.input field={@form[:description]} type="textarea" label="Description" />
-                    <.input field={@form[:phone_number]} type="text" label="Phone Number" />
-                    <.input field={@form[:email]} type="text" label="Email" />
-                    <.input field={@form[:facebook]} type="text" label="Facebook" />
-                    <.input field={@form[:instagram]} type="text" label="Instagram" />
-                    <.input field={@form[:tik_tok]} type="text" label="Tik Tok" />
-                    <.input field={@form[:linked_in]} type="text" label="Linked In" />
-                    <.input field={@form[:slug]} type="text" label="Slug" />
-                    <div class="pt-1">
-                      <.input field={@form[:visible]} type="checkbox" label="Visible" />
+                    <div>
+                      <.input field={@form[:job_title]} type="text" label="Job title" placeholder="Captain" />
+                      <.hint>Optional. Shown under their name.</.hint>
+                    </div>
+
+                    <div :if={@current_image || @uploads.image.entries != []}>
+                      <label for="bio-image-alt" class="label mb-1">Photo description</label>
+                      <input type="text" id="bio-image-alt" name="image_alt" value={@image_alt} class="input w-full" placeholder="For example: James smiling at the helm of Empire" />
+                      <.hint>Describes the photo for people using screen readers, and helps search engines. One plain sentence.</.hint>
                     </div>
                   </div>
-
-                  <div class="border-t border-gray-200 pt-8">
-                    <div class="flex items-start justify-between gap-6">
-                      <div>
-                        <h2 class="text-base font-semibold tracking-tight text-gray-900">Image</h2>
-                        <p class="mt-1 text-sm text-gray-600">Optional.</p>
-                      </div>
-                    </div>
-
-                    <%= if @current_image do %>
-                      <div class="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                        <div class="flex items-start gap-4">
-                          <img src={@current_image.url} alt={@current_image.alt || ""} class="h-28 w-28 object-cover rounded-lg ring-1 ring-gray-300" />
-                          <div class="flex-1 space-y-1">
-                            <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Filename:</span> {@current_image.filename}</p>
-                            <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Content-Type:</span> {@current_image.content_type}</p>
-                            <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Size:</span> {@current_image.size}</p>
-                            <p :if={@current_image.caption} class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Caption:</span> {@current_image.caption}</p>
-                          </div>
-                        </div>
-                      </div>
-                    <% else %>
-                      <p class="mt-3 text-sm text-gray-600 italic">No image assigned to this bio.</p>
-                    <% end %>
-
-                    <div class="mt-6 flex flex-col items-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
-                      <div class="mb-4 flex w-full items-center justify-center">
-                        <label for={@uploads.image.ref} class="inline-flex cursor-pointer items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-indigo-600">
-                          <.icon name="hero-arrow-up-tray" class="h-5 w-5 text-gray-500" /> Choose image
-                        </label>
-
-                        <.live_file_input upload={@uploads.image} class="sr-only" />
-                      </div>
-
-                      <section class="phx-drop-target mb-6 flex h-44 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 p-4 transition duration-200 hover:bg-gray-200" phx-drop-target={@uploads.image.ref}>
-                        <p class="text-center text-gray-500">Drop your file here or click Choose image.</p>
-                        <p class="mt-1 text-xs text-gray-400">1 image per bio (for now).</p>
-                      </section>
-
-                      <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
-                        <article :for={entry <- @uploads.image.entries} class="w-full rounded-lg bg-white p-4 shadow-sm">
-                          <figure class="flex flex-col items-center">
-                            <.live_img_preview entry={entry} class="mb-2 max-h-48 object-contain" />
-                            <figcaption class="text-sm text-gray-600">{entry.client_name}</figcaption>
-                          </figure>
-
-                          <progress value={entry.progress} max="100" class="mb-2 h-2 w-full rounded-lg bg-blue-100">{entry.progress}%</progress>
-
-                          <button type="button" phx-click="cancel-upload" phx-value-ref={entry.ref} class="text-lg font-bold text-red-500 transition duration-200 hover:text-red-700" aria-label="cancel">&times;</button>
-
-                          <p :for={err <- upload_errors(@uploads.image, entry)} class="mt-2 text-sm text-red-500">{error_to_string(err)}</p>
-                        </article>
-                      </div>
-
-                      <p :for={err <- upload_errors(@uploads.image)} class="mt-2 text-sm text-red-500">{error_to_string(err)}</p>
-                    </div>
-                  </div>
-
-                  <footer class="flex justify-end gap-3 pt-6">
-                    <.link navigate={return_path(@return_to, @cms_bio)} class="btn btn-primary btn-soft">
-                      Cancel
-                    </.link>
-
-                    <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-                      Save Cms bio
-                    </.button>
-                  </footer>
                 </div>
-              </.form>
-            </div>
-          </section>
-        </div>
+              </div>
+
+              <div class="space-y-5 border-t border-zinc-200 pt-8">
+                <h2 class="text-lg font-semibold tracking-tight text-gray-900">About</h2>
+                <div>
+                  <.input field={@form[:tag_line]} type="text" label="Tag line" />
+                  <.hint>Optional. One short line about them, like a motto.</.hint>
+                </div>
+                <div>
+                  <.input field={@form[:description]} type="textarea" label="About them" rows="6" />
+                  <.hint>Optional. A few sentences about who they are.</.hint>
+                </div>
+              </div>
+
+              <div class="space-y-5 border-t border-zinc-200 pt-8">
+                <div>
+                  <h2 class="text-lg font-semibold tracking-tight text-gray-900">Contact</h2>
+                  <p class="mt-1 text-sm text-gray-600">Optional. Anything left blank stays off the site.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <.input field={@form[:email]} type="email" label="Email" placeholder="name@example.com" autocomplete="off" />
+                  <.input field={@form[:phone_number]} type="tel" label="Phone number" placeholder="(555) 123-4567" autocomplete="off" />
+                </div>
+              </div>
+
+              <div class="space-y-5 border-t border-zinc-200 pt-8">
+                <div>
+                  <h2 class="text-lg font-semibold tracking-tight text-gray-900">Social</h2>
+                  <p class="mt-1 text-sm text-gray-600">Optional. Paste the full web address of each profile, the one you see when you open it in a browser.</p>
+                </div>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <.input field={@form[:facebook]} type="text" inputmode="url" label="Facebook" placeholder="https://facebook.com/yourname" />
+                  <.input field={@form[:instagram]} type="text" inputmode="url" label="Instagram" placeholder="https://instagram.com/yourname" />
+                  <.input field={@form[:tik_tok]} type="text" inputmode="url" label="TikTok" placeholder="https://tiktok.com/@yourname" />
+                  <.input field={@form[:linked_in]} type="text" inputmode="url" label="LinkedIn" placeholder="https://linkedin.com/in/yourname" />
+                </div>
+              </div>
+
+              <div class="space-y-5 border-t border-zinc-200 pt-8">
+                <h2 class="text-lg font-semibold tracking-tight text-gray-900">On the site</h2>
+                <div>
+                  <.input field={@form[:slug]} type="text" label="Profile address" placeholder="jane-smith" />
+                  <.hint>The end of this bio's web address, in lowercase words joined by dashes. {if @live_action == :new, do: "Filled in from the name if you leave it blank.", else: "Changing it breaks links people already have."}</.hint>
+                </div>
+                <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                  <.input field={@form[:visible]} type="checkbox" label="Show this bio on the site" />
+                  <.hint>Uncheck to hide it without deleting it.</.hint>
+                </div>
+              </div>
+
+              <div class="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <button :if={@live_action == :edit} type="button" id="delete-cms-bio" phx-click="delete" data-confirm={"Delete the bio for \"#{@cms_bio.name}\"? This can't be undone."} class="text-sm font-semibold text-red-600 hover:text-red-500">
+                  Delete bio
+                </button>
+                <span :if={@live_action == :new}></span>
+                <div class="flex flex-col-reverse gap-3 sm:flex-row">
+                  <.button navigate={return_path(@return_to, @cms_bio)}>Cancel</.button>
+                  <.button type="submit" variant="primary" phx-disable-with="Saving...">{if @live_action == :new, do: "Create bio", else: "Save bio"}</.button>
+                </div>
+              </div>
+            </.form>
+          </div>
+        </section>
       </div>
     </main>
     """
@@ -123,8 +156,7 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Form do
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
-     |> assign(:current_image, nil)
-     |> allow_upload(:image, accept: ~w(.jpg .jpeg .png .gif .webp .heic .heif .bmp .tiff), max_entries: 1, max_file_size: 20_000_000, external: &presign_upload/2)
+     |> ImageUploads.allow_image_upload(:image)
      |> apply_action(socket.assigns.live_action, params)}
   end
 
@@ -132,95 +164,106 @@ defmodule DeadSimpleCmsWeb.CmsBioLive.Form do
   defp return_to(_), do: "index"
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    cms_bio = SpecialContent.get_cms_bio!(id)
-
     socket
-    |> assign(:page_title, "Edit Cms bio")
-    |> assign(:cms_bio, cms_bio)
-    |> assign(:form, to_form(SpecialContent.change_cms_bio(cms_bio)))
-    |> assign(:current_image, Map.get(cms_bio, :cms_image))
+    |> assign(:page_title, "Edit bio")
+    |> assign_bio(SpecialContent.get_cms_bio!(id))
   end
 
   defp apply_action(socket, :new, _params) do
-    cms_bio = %CmsBio{}
-
     socket
-    |> assign(:page_title, "New Cms bio")
+    |> assign(:page_title, "New bio")
+    |> assign_bio(%CmsBio{cms_image: nil})
+  end
+
+  defp assign_bio(socket, cms_bio) do
+    socket
     |> assign(:cms_bio, cms_bio)
     |> assign(:form, to_form(SpecialContent.change_cms_bio(cms_bio)))
-    |> assign(:current_image, nil)
+    |> assign(:current_image, cms_bio.cms_image)
+    |> assign(:image_alt, cms_bio.cms_image && cms_bio.cms_image.alt)
   end
 
   @impl true
-  def handle_event("validate", %{"cms_bio" => cms_bio_params}, socket) do
-    {:noreply, assign(socket, form: to_form(SpecialContent.change_cms_bio(socket.assigns.cms_bio, cms_bio_params), action: :validate))}
+  def handle_event("validate", %{"cms_bio" => cms_bio_params} = params, socket) do
+    changeset = SpecialContent.change_cms_bio(socket.assigns.cms_bio, cms_bio_params)
+    {:noreply, socket |> assign(:form, to_form(changeset, action: :validate)) |> assign(:image_alt, Map.get(params, "image_alt", socket.assigns.image_alt))}
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
     {:noreply, cancel_upload(socket, :image, ref)}
   end
 
-  def handle_event("save", %{"cms_bio" => cms_bio_params}, socket) do
-    save_cms_bio(socket, socket.assigns.live_action, cms_bio_params)
+  def handle_event("remove-photo", _params, socket) do
+    case SpecialContent.update_cms_bio(socket.assigns.cms_bio, %{cms_image_id: nil}) do
+      {:ok, cms_bio} ->
+        # Keep whatever the editor has typed but not saved yet.
+        changeset = SpecialContent.change_cms_bio(cms_bio, socket.assigns.form.params || %{})
+
+        {:noreply,
+         socket
+         |> put_flash(:info, "Photo removed from the bio")
+         |> assign(cms_bio: %{cms_bio | cms_image: nil}, current_image: nil, image_alt: nil, form: to_form(changeset))}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "The photo couldn't be removed. Try again.")}
+    end
+  end
+
+  def handle_event("delete", _params, socket) do
+    cms_bio = socket.assigns.cms_bio
+
+    case SpecialContent.delete_cms_bio(cms_bio) do
+      {:ok, _} -> {:noreply, socket |> put_flash(:info, "Bio \"#{cms_bio.name}\" deleted") |> push_navigate(to: DeadSimpleCms.path("/cms_bios"))}
+      {:error, _} -> {:noreply, put_flash(socket, :error, "The bio for \"#{cms_bio.name}\" couldn't be deleted. Try again.")}
+    end
+  end
+
+  def handle_event("save", %{"cms_bio" => cms_bio_params} = params, socket) do
+    alt = present(params["image_alt"])
+
+    with {:ok, cms_bio_params} <- attach_upload(socket, cms_bio_params, alt),
+         :ok <- update_image_alt(socket.assigns.current_image, cms_bio_params, alt) do
+      save_cms_bio(socket, socket.assigns.live_action, cms_bio_params)
+    else
+      {:error, _image_changeset} -> {:noreply, put_flash(socket, :error, "The photo couldn't be saved. Try the upload again.")}
+    end
   end
 
   defp save_cms_bio(socket, :edit, cms_bio_params) do
-    updated_params = merge_file_params(socket, cms_bio_params)
-
-    case SpecialContent.update_cms_bio(socket.assigns.cms_bio, updated_params) do
-      {:ok, cms_bio} ->
-        {:noreply, socket |> put_flash(:info, "Cms bio updated successfully") |> push_navigate(to: return_path(socket.assigns.return_to, cms_bio))}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+    case SpecialContent.update_cms_bio(socket.assigns.cms_bio, cms_bio_params) do
+      {:ok, cms_bio} -> {:noreply, socket |> put_flash(:info, "Bio saved") |> push_navigate(to: return_path(socket.assigns.return_to, cms_bio))}
+      {:error, %Ecto.Changeset{} = changeset} -> {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
   defp save_cms_bio(socket, :new, cms_bio_params) do
-    updated_params = merge_file_params(socket, cms_bio_params)
-
-    case SpecialContent.create_cms_bio(updated_params) do
-      {:ok, cms_bio} ->
-        {:noreply, socket |> put_flash(:info, "Cms bio created successfully") |> push_navigate(to: return_path(socket.assigns.return_to, cms_bio))}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+    case SpecialContent.create_cms_bio(cms_bio_params) do
+      {:ok, cms_bio} -> {:noreply, socket |> put_flash(:info, "Bio created") |> push_navigate(to: return_path(socket.assigns.return_to, cms_bio))}
+      {:error, %Ecto.Changeset{} = changeset} -> {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
-  defp merge_file_params(socket, cms_bio_params) do
-    uploaded_images =
-      consume_uploaded_entries(socket, :image, fn meta, entry ->
-        %{uploader: "S3", public_url: url, key: key} = meta
-        {:ok, %{filename: entry.client_name, url: url, size: entry.client_size, content_type: entry.client_type, key: key}}
-      end)
-
-    case uploaded_images do
-      [] ->
-        cms_bio_params
-
-      [%{filename: filename, url: url, size: size, content_type: content_type} | _] ->
-        {:ok, image} = Cms.create_cms_image(%{"filename" => filename, "url" => url, "size" => size, "content_type" => content_type})
-        Map.put(cms_bio_params, "cms_image_id", image.id)
+  defp attach_upload(socket, cms_bio_params, alt) do
+    case ImageUploads.consume_image(socket, :image, alt) do
+      :none -> {:ok, cms_bio_params}
+      {:ok, image} -> {:ok, Map.put(cms_bio_params, "cms_image_id", image.id)}
+      {:error, changeset} -> {:error, changeset}
     end
   end
 
-  defp presign_upload(entry, socket) do
-    case S3Uploader.generate_presigned_url(entry.client_name, entry.client_type) do
-      {:ok, upload_url, public_url, key} ->
-        {:ok, %{uploader: "S3", url: upload_url, headers: %{"content-type" => entry.client_type, "x-amz-acl" => "public-read", "acl" => "public-read"}, fields: %{}, public_url: public_url, key: key}, socket}
-
-      {:error, reason} ->
-        {:error, reason, socket}
+  # The description typed for the bio's current photo is saved on that photo.
+  defp update_image_alt(%{alt: current} = image, cms_bio_params, alt) when not is_map_key(cms_bio_params, "cms_image_id") and alt != current do
+    case Cms.update_cms_image(image, %{alt: alt}) do
+      {:ok, _} -> :ok
+      error -> error
     end
   end
 
-  defp return_path("index", _cms_bio), do: DeadSimpleCms.path("/cms_bios")
-  defp return_path("show", cms_bio), do: DeadSimpleCms.path("/cms_bios/#{cms_bio.id}")
+  defp update_image_alt(_image, _cms_bio_params, _alt), do: :ok
 
-  defp error_to_string({:too_large, %{max_size: max_size}}), do: "File is too large (maximum size is #{div(max_size, 1_000_000)} MB)"
-  defp error_to_string({:not_accepted, %{accepted_types: types}}), do: "Only files of type: #{Enum.join(types, ", ")} are allowed"
-  defp error_to_string(:external_client_failure), do: "Upload failed: client could not complete upload."
-  defp error_to_string(:external_upload_failure), do: "Upload failed: server could not process upload."
-  defp error_to_string(error), do: "Unexpected error: #{inspect(error)}"
+  defp present(value) when is_binary(value), do: if(String.trim(value) == "", do: nil, else: String.trim(value))
+  defp present(_value), do: nil
+
+  defp return_path("show", %CmsBio{id: id}) when not is_nil(id), do: DeadSimpleCms.path("/cms_bios/#{id}")
+  defp return_path(_return_to, _cms_bio), do: DeadSimpleCms.path("/cms_bios")
 end

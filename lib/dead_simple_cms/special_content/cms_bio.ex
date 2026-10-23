@@ -33,7 +33,9 @@ defmodule DeadSimpleCms.SpecialContent.CmsBio do
     cms_bio
     |> cast(attrs, [:name, :job_title, :tag_line, :description, :phone_number, :email, :facebook, :instagram, :tik_tok, :linked_in, :slug, :visible, :cms_image_id])
     |> maybe_put_slug()
+    |> normalize_social_links()
     |> validate_required([:name, :slug, :visible])
+    |> validate_format(:email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "doesn't look like an email address")
     |> unique_constraint(:slug)
     |> foreign_key_constraint(:cms_image_id)
   end
@@ -52,6 +54,20 @@ defmodule DeadSimpleCms.SpecialContent.CmsBio do
       true ->
         changeset
     end
+  end
+
+  # A profile typed without https:// ("instagram.com/name") still becomes a working link.
+  defp normalize_social_links(changeset) do
+    Enum.reduce([:facebook, :instagram, :tik_tok, :linked_in], changeset, fn field, changeset ->
+      case get_change(changeset, field) do
+        value when is_binary(value) ->
+          value = String.trim(value)
+          if value == "" or value =~ ~r/^https?:\/\//i, do: put_change(changeset, field, value), else: put_change(changeset, field, "https://" <> value)
+
+        _ ->
+          changeset
+      end
+    end)
   end
 
   defp slugify(value) do

@@ -6,31 +6,36 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <.content_header main_title="Listing CMS Page Templates" sub_title="Admin" description="Page templates define the overall content structure pattern for CMS pages.">
+    <.content_header main_title="Templates" sub_title="Website content" description="Templates give new pages their starting sections, and can add shared sections to every page that uses them.">
       <:action>
-        <.link navigate={DeadSimpleCms.path("/cms_page_templates/new")} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-          <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" /> Add CMS Page Template
-        </.link>
+        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_page_templates/new")}>
+          <.icon name="hero-plus" class="size-4" /> New template
+        </.button>
       </:action>
     </.content_header>
 
     <.admin_table
       id="cms_page_templates"
       rows={@streams.cms_page_templates}
-      row_click={fn {_id, cms_page_template} -> JS.navigate(DeadSimpleCms.path("/cms_page_templates/#{cms_page_template.id}")) end}
+      row_click={fn {_id, template} -> JS.navigate(DeadSimpleCms.path("/cms_page_templates/#{template.id}/edit")) end}
+      empty_title="No templates yet"
+      empty_description="Templates are optional. Create one to give new pages a ready-made set of sections."
     >
-      <:col :let={{_id, cms_page_template}} label="Key">{cms_page_template.key}</:col>
-      <:col :let={{_id, cms_page_template}} label="Name">{cms_page_template.name}</:col>
-      <:col :let={{_id, cms_page_template}} label="Description">{cms_page_template.description}</:col>
+      <:col :let={{_id, template}} label="Template">
+        <span class="block">{template.name}</span>
+        <span :if={template.description} class="block max-w-md text-xs font-normal text-zinc-500">{template.description}</span>
+      </:col>
+      <:col :let={{_id, template}} label="Sections">{Map.get(@area_counts, template.id, 0)}</:col>
+      <:col :let={{_id, template}} label="Used by">{pages_label(Map.get(@page_counts, template.id, 0))}</:col>
 
-      <:action :let={{_id, cms_page_template}}>
-        <.link navigate={DeadSimpleCms.path("/cms_page_templates/#{cms_page_template.id}/edit")}>
-          Edit
-        </.link>
+      <:action :let={{_id, template}}>
+        <.link navigate={DeadSimpleCms.path("/cms_page_templates/#{template.id}/edit")}>Edit</.link>
       </:action>
-
-      <:action :let={{_id, cms_page_template}}>
-        <.link phx-click={JS.push("delete", value: %{id: cms_page_template.id})} data-confirm="Are you sure?">
+      <:action :let={{_id, template}}>
+        <.link
+          phx-click={JS.push("delete", value: %{id: template.id})}
+          data-confirm={"Delete the template \"#{template.name}\"? Pages using it keep their own sections but lose its shared sections. This can't be undone."}
+        >
           Delete
         </.link>
       </:action>
@@ -40,21 +45,24 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    page_counts = Cms.list_cms_pages() |> Enum.frequencies_by(& &1.cms_page_template_id)
+
     {:ok,
      socket
-     |> assign(:page_title, "Listing CMS page templates")
-     |> stream(:cms_page_templates, list_cms_page_templates())}
+     |> assign(:page_title, "Templates")
+     |> assign(:area_counts, Cms.content_area_counts())
+     |> assign(:page_counts, page_counts)
+     |> stream(:cms_page_templates, Enum.sort_by(Cms.list_cms_page_templates(), &String.downcase(&1.name)))}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
-    cms_page_template = Cms.get_cms_page_template!(id)
-    {:ok, _} = Cms.delete_cms_page_template(cms_page_template)
-
-    {:noreply, stream_delete(socket, :cms_page_templates, cms_page_template)}
+    template = Cms.get_cms_page_template!(id)
+    {:ok, _} = Cms.delete_cms_page_template(template)
+    {:noreply, socket |> put_flash(:info, "Template \"#{template.name}\" deleted") |> stream_delete(:cms_page_templates, template)}
   end
 
-  defp list_cms_page_templates do
-    Cms.list_cms_page_templates()
-  end
+  defp pages_label(0), do: "No pages"
+  defp pages_label(1), do: "1 page"
+  defp pages_label(count), do: "#{count} pages"
 end

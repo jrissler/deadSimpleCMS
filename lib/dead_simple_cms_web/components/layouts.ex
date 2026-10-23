@@ -34,38 +34,25 @@ defmodule DeadSimpleCmsWeb.Layouts do
   # slot :inner_block, required: true
 
   def app(assigns) do
+    # Everyday editing first; templates, section types and the raw section list are setup.
+    assigns =
+      assigns
+      |> Map.put(:content_links, [{"Pages", "/cms_pages"}, {"Images", "/cms_images"}, {"Bios", "/cms_bios"}, {"Testimonials", "/cms_testimonials"}])
+      |> Map.put(:setup_links, [{"Templates", "/cms_page_templates"}, {"Section types", "/cms_slots"}, {"All sections", "/cms_content_areas"}, {"About", "/about"}])
+
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
-        </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="/cms_pages" class="btn btn-ghost">Pages</a>
-          </li>
-          <li>
-            <a href="/cms_page_templates" class="btn btn-ghost">Page Templates</a>
-          </li>
-          <li>
-            <a href="/cms_content_areas" class="btn btn-ghost">Content Areas</a>
-          </li>
-          <li>
-            <a href="/cms_images" class="btn btn-ghost">Images</a>
-          </li>
-          <li>
-            <a href="/cms_slots" class="btn btn-ghost">Slots</a>
-          </li>
-          <li>
-            <a href="/cms_bios" class="btn btn-ghost">Bios</a>
-          </li>
-          <li>
-            <a href="/cms_testimonials" class="btn btn-ghost">Testimonials</a>
-          </li>
-        </ul>
+    <header class="border-b border-zinc-200 bg-white px-4 py-3 sm:px-6 lg:px-8">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3">
+        <.link navigate={DeadSimpleCms.path("/cms_pages")} class="flex items-center gap-2 font-semibold text-zinc-900">
+          <img src={~p"/images/logo.svg"} width="28" alt="" /> Content
+        </.link>
+        <nav aria-label="Content" class="flex flex-wrap items-center gap-1 text-sm">
+          <.link :for={{label, path} <- @content_links} navigate={DeadSimpleCms.path(path)} class="rounded-md px-3 py-1.5 font-medium text-zinc-700 hover:bg-zinc-100">{label}</.link>
+        </nav>
+        <nav aria-label="Setup" class="flex flex-wrap items-center gap-1 text-sm sm:ml-auto">
+          <span class="px-2 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-400">Setup</span>
+          <.link :for={{label, path} <- @setup_links} navigate={DeadSimpleCms.path(path)} class="rounded-md px-3 py-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800">{label}</.link>
+        </nav>
       </div>
     </header>
 

@@ -425,6 +425,74 @@ defmodule DeadSimpleCms.Cms do
   end
 
   @doc """
+  The content areas of a page (`{:page, id}`) or template (`{:template, id}`),
+  in order, with their image and slot.
+  """
+  def list_owner_content_areas(owner) do
+    from(a in owner_areas_query(owner), order_by: [asc: a.position, asc: a.inserted_at], preload: [:cms_image, :cms_slot])
+    |> repo().all()
+  end
+
+  @doc "The position for a new content area at the end of a page or template."
+  def next_content_area_position(owner) do
+    (repo().one(from(a in owner_areas_query(owner), select: max(a.position))) || -1) + 1
+  end
+
+  @doc """
+  Moves a content area one place `:up` or `:down` among its page's (or
+  template's) areas, renumbering them 0, 1, 2... Returns `:ok`, or `:noop`
+  when it is already first or last.
+  """
+  def move_cms_content_area(%CmsContentArea{} = area, direction) when direction in [:up, :down] do
+    owner = if area.cms_page_id, do: {:page, area.cms_page_id}, else: {:template, area.cms_page_template_id}
+    ids = owner |> list_owner_content_areas() |> Enum.map(& &1.id)
+    index = Enum.find_index(ids, &(&1 == area.id))
+    target = if direction == :up, do: index - 1, else: index + 1
+
+    if target < 0 or target >= length(ids) do
+      :noop
+    else
+      reordered = ids |> List.replace_at(index, Enum.at(ids, target)) |> List.replace_at(target, area.id)
+
+      repo().transaction(fn ->
+        reordered |> Enum.with_index() |> Enum.each(fn {id, position} -> repo().update_all(from(a in CmsContentArea, where: a.id == ^id), set: [position: position]) end)
+      end)
+
+      :ok
+    end
+  end
+
+  defp owner_areas_query({:page, id}), do: from(a in CmsContentArea, where: a.cms_page_id == ^id)
+  defp owner_areas_query({:template, id}), do: from(a in CmsContentArea, where: a.cms_page_template_id == ^id)
+
+  @doc """
+  Where an image is used, so the admin can show it and warn before deleting:
+  `%{areas: [...], bios: [...], pages: [...]}`. Areas come with their page or
+  template; pages are those using it as their social share image.
+  """
+  def image_usage(%CmsImage{id: id}) do
+    %{
+      areas: repo().all(from(a in CmsContentArea, where: a.cms_image_id == ^id, order_by: a.name, preload: [:cms_page, :cms_page_template])),
+      bios: repo().all(from(b in DeadSimpleCms.SpecialContent.CmsBio, where: b.cms_image_id == ^id, order_by: b.name)),
+      pages: repo().all(from(p in CmsPage, where: p.og_image_id == ^id, order_by: p.title))
+    }
+  end
+
+  @doc "How many content areas use each slot, as `%{slot_id => count}`."
+  def slot_usage_counts do
+    from(a in CmsContentArea, where: not is_nil(a.cms_slot_id), group_by: a.cms_slot_id, select: {a.cms_slot_id, count(a.id)})
+    |> repo().all()
+    |> Map.new()
+  end
+
+  @doc "How many content areas each page and template has, as `%{id => count}`."
+  def content_area_counts do
+    from(a in CmsContentArea, select: {coalesce(a.cms_page_id, a.cms_page_template_id), count(a.id)}, group_by: [a.cms_page_id, a.cms_page_template_id])
+    |> repo().all()
+    |> Map.new()
+  end
+
+  @doc """
   Returns the list of cms_slots.
 
   ## Examples

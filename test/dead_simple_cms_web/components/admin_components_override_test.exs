@@ -130,9 +130,24 @@ defmodule DeadSimpleCmsWeb.AdminComponentsOverrideTest do
       {:ok, _live, html} = live(conn, ~p"/cms_pages/#{cms_page}")
 
       assert html =~ ~s(class="host-header")
-      assert html =~ "<h1>Viewing CMS Page</h1>"
-      assert html =~ ~s(<table class="host-table" id="cms_page">)
-      assert html =~ "Override Check"
+      assert html =~ "<h1>Override Check</h1>"
+      assert html =~ "host-button"
+    end
+
+    test "non_list_table uses the host's override" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <.non_list_table object_name="details" headers={["Field", "Value"]}>
+          <:row>
+            <td>Title</td><td>Home</td>
+          </:row>
+        </.non_list_table>
+        """)
+
+      assert html =~ ~s(<table class="host-table" id="details">)
+      assert html =~ "Home"
     end
   end
 end

@@ -30,6 +30,8 @@ defmodule DeadSimpleCmsWeb.Router do
 
     get "/", PageController, :home
 
+    live "/about", AboutLive, :index
+
     live "/cms_page_templates", CmsPageTemplateLive.Index, :index
     live "/cms_page_templates/new", CmsPageTemplateLive.Form, :new
     live "/cms_page_templates/:id", CmsPageTemplateLive.Show, :show
@@ -68,6 +70,8 @@ defmodule DeadSimpleCmsWeb.Router do
 
   defmacro dead_simple_cms_admin_routes do
     quote do
+      live "/about", DeadSimpleCmsWeb.AboutLive, :index
+
       live "/cms_page_templates", DeadSimpleCmsWeb.CmsPageTemplateLive.Index, :index
       live "/cms_page_templates/new", DeadSimpleCmsWeb.CmsPageTemplateLive.Form, :new
       live "/cms_page_templates/:id", DeadSimpleCmsWeb.CmsPageTemplateLive.Show, :show

@@ -95,8 +95,12 @@ preloads but includes unpublished pages.
 - Structured fields (`title`, `subtitle`, `body_md`)
 - Optional image (`cms_image_id`)
 
-Admin views allow move up/down and renumber operations.\
-No drag-and-drop.
+Editors work on sections inside the page and template editors, which share
+one section editor (`DeadSimpleCmsWeb.ContentAreasEditor`): each section has
+a live preview, its type's help text, an image upload with its description
+(alt text), Move up / Move down and Delete, and saves on its own.
+`Cms.move_cms_content_area/2` renumbers positions 0, 1, 2...; there's no
+drag-and-drop.
 
 ---
 

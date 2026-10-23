@@ -3,131 +3,79 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
 
   alias DeadSimpleCms.Cms
   alias DeadSimpleCms.Cms.CmsPageTemplate
+  alias DeadSimpleCmsWeb.ContentAreasEditor
 
   @impl true
   def render(assigns) do
     ~H"""
-    <.content_header main_title={@page_title} sub_title="Admin" description="Page templates define the overall content structure pattern for CMS pages." />
+    <.content_header main_title={@page_title} sub_title={@live_action == :edit && @cms_page_template.name} description="A template gives new pages their starting sections, and can add shared sections to every page that uses it.">
+      <:action>
+        <.button navigate={DeadSimpleCms.path("/cms_page_templates")}>
+          <.icon name="hero-arrow-left" class="size-4" /> All templates
+        </.button>
+      </:action>
+    </.content_header>
 
     <main class="pt-2 pb-16 mt-0">
-      <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-        <div class="px-4 sm:px-0">
-          <section aria-labelledby="cms-page-template-form-heading">
-            <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-              <.form for={@form} id="cms_page_template-form" phx-change="validate" phx-submit="save" class="space-y-6 p-6 sm:p-8">
-                <div class="grid grid-cols-1 gap-6">
-                  <.input field={@form[:key]} type="text" label="Key" />
-                  <.input field={@form[:name]} type="text" label="Name" />
-                  <.input field={@form[:description]} type="textarea" label="Description" />
-                </div>
+      <div class="mx-auto max-w-5xl space-y-10 px-4 sm:px-6 lg:px-8">
+        <section aria-labelledby="template-settings-heading">
+          <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+            <.form for={@form} id="cms_page_template-form" phx-change="validate" phx-submit="save" class="space-y-5 p-6 sm:p-8">
+              <h2 id="template-settings-heading" class="text-lg font-semibold tracking-tight text-gray-900">Template settings</h2>
 
-                <div class="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-6 sm:flex-row sm:justify-end">
-                  <.link navigate={return_path(@return_to, @cms_page_template)} class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500">
-                    Cancel
-                  </.link>
+              <.input field={@form[:name]} type="text" label="Template name" />
 
-                  <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-                    Save CMS Page Template
-                  </.button>
-                </div>
-              </.form>
-            </div>
-          </section>
-
-          <%= if @live_action == :edit do %>
-            <section aria-labelledby="cms-page-template-content-areas-heading">
-              <.content_header main_title="Content Areas" sub_title="Template Content" description="Edit content areas for this page template.">
-                <:action>
-                  <button type="button" phx-click="add_area" class="btn btn-primary">
-                    Add Content Area
-                  </button>
-                </:action>
-              </.content_header>
-
-              <div class="space-y-6 mt-6">
-                <%= for area <- @areas do %>
-                  <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-                    <div class="border-b border-zinc-200 px-6 py-4">
-                      <div class="min-w-0">
-                        <div class="truncate text-base font-semibold text-zinc-900">
-                          {area.name || "(unnamed)"}
-                        </div>
-                        <div class="mt-1 text-sm text-zinc-600">
-                          position: {area.position} • visible: {area.visible}
-                          {if area.cms_slot_id, do: " • slot", else: ""}
-                          {if area.shared, do: " • shared on every page", else: " • starter section"}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="p-6 sm:p-8">
-                      <.form for={@area_forms[area.id]} id={"content-area-form-#{area.id}"} phx-change="validate_area" phx-submit="save_area" class="space-y-6">
-                        <input type="hidden" name="_id" value={area.id} />
-
-                        <div class="grid grid-cols-1 gap-4">
-                          <.input field={@area_forms[area.id][:name]} id={"content-area-#{area.id}-name"} type="text" label="Name" />
-                          <.input field={@area_forms[area.id][:cms_slot_id]} id={"content-area-#{area.id}-cms-slot-id"} type="select" label="Slot" options={[{"Select a slot", nil}] ++ Enum.map(@cms_slots, &{&1.name, &1.id})} />
-                          <.input field={@area_forms[area.id][:visible]} id={"content-area-#{area.id}-visible"} type="checkbox" label="Visible" />
-                          <div>
-                            <.input field={@area_forms[area.id][:shared]} id={"content-area-#{area.id}-shared"} type="checkbox" label="Shared on every page" />
-                            <p class="mt-1 text-xs text-gray-500">Shared sections show on every page that uses this template. Unchecked sections are starters, copied into each new page to edit there.</p>
-                          </div>
-                          <.input field={@area_forms[area.id][:position]} id={"content-area-#{area.id}-position"} type="number" label="Position" />
-                          <.input field={@area_forms[area.id][:title]} id={"content-area-#{area.id}-title"} type="text" label="Title" />
-                          <.input field={@area_forms[area.id][:subtitle]} id={"content-area-#{area.id}-subtitle"} type="text" label="Subtitle" />
-
-                          <div class="space-y-2 fieldset">
-                            <label for={"content-area-#{area.id}-body-md-input"} class="label mb-1">
-                              Body (Markdown)
-                            </label>
-
-                            <textarea id={"content-area-#{area.id}-body-md-input"} name={@area_forms[area.id][:body_md].name} class="hidden"><%= Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || "" %></textarea>
-
-                            <div id={"content-area-#{area.id}-body-md-editor-wrapper"} phx-update="ignore">
-                              <div id={"content-area-#{area.id}-body-md-editor"} phx-hook="EasyMDE" data-target-input-id={"content-area-#{area.id}-body-md-input"} data-initial-value={Phoenix.HTML.Form.input_value(@area_forms[area.id], :body_md) || ""}></div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="mt-4 flex gap-2">
-                          <.button type="submit" phx-disable-with="Saving..." class="btn btn-primary">
-                            Save Area
-                          </.button>
-                        </div>
-                      </.form>
-                    </div>
-                  </div>
-                <% end %>
+              <div>
+                <.input field={@form[:description]} type="textarea" label="Description" />
+                <.hint>What the template is for. Editors see it when choosing a template for a page.</.hint>
               </div>
-            </section>
-          <% end %>
-        </div>
+
+              <div>
+                <.input field={@form[:key]} type="text" label="Key" />
+                <.hint>The name the website's code uses for this template, like story_page. {if @live_action == :edit, do: "Changing it can change how pages that use it look.", else: "Ask your developer what to use."}</.hint>
+              </div>
+
+              <p :if={@live_action == :edit} class="text-sm text-zinc-600">
+                Used by {pages_sentence(@pages)}.
+              </p>
+
+              <div class="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  :if={@live_action == :edit}
+                  type="button"
+                  id="delete-cms-page-template"
+                  phx-click="delete"
+                  data-confirm={delete_confirm(@cms_page_template, @pages)}
+                  class="text-sm font-semibold text-red-600 hover:text-red-500"
+                >
+                  Delete template
+                </button>
+                <span :if={@live_action == :new}></span>
+                <div class="flex flex-col-reverse gap-3 sm:flex-row">
+                  <.button :if={@live_action == :new} navigate={DeadSimpleCms.path("/cms_page_templates")}>Cancel</.button>
+                  <.button type="submit" variant="primary" phx-disable-with="Saving...">{if @live_action == :new, do: "Create template", else: "Save template settings"}</.button>
+                </div>
+              </div>
+            </.form>
+          </div>
+        </section>
+
+        <.live_component :if={@live_action == :edit} module={ContentAreasEditor} id="content-areas" owner={{:template, @cms_page_template.id}} />
       </div>
     </main>
     """
   end
 
   @impl true
-  def mount(params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:return_to, return_to(params["return_to"]))
-     |> assign(:cms_slots, Cms.list_cms_slots())
-     |> apply_action(socket.assigns.live_action, params)}
-  end
-
-  defp return_to("show"), do: "show"
-  defp return_to(_), do: "index"
+  def mount(params, _session, socket), do: {:ok, apply_action(socket, socket.assigns.live_action, params)}
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     cms_page_template = Cms.get_cms_page_template!(id)
-    areas = Enum.sort_by(cms_page_template.cms_content_areas, & &1.position)
 
     socket
-    |> assign(:page_title, "Edit CMS Page Template")
+    |> assign(:page_title, "Edit template")
     |> assign(:cms_page_template, cms_page_template)
-    |> assign(:areas, areas)
-    |> assign(:area_forms, build_area_forms(areas))
+    |> assign(:pages, pages_using(cms_page_template))
     |> assign(:form, to_form(Cms.change_cms_page_template(cms_page_template)))
   end
 
@@ -135,103 +83,58 @@ defmodule DeadSimpleCmsWeb.CmsPageTemplateLive.Form do
     cms_page_template = %CmsPageTemplate{}
 
     socket
-    |> assign(:page_title, "New CMS Page Template")
+    |> assign(:page_title, "New template")
     |> assign(:cms_page_template, cms_page_template)
-    |> assign(:areas, [])
-    |> assign(:area_forms, %{})
+    |> assign(:pages, [])
     |> assign(:form, to_form(Cms.change_cms_page_template(cms_page_template)))
   end
 
   @impl true
-  def handle_event("validate", %{"cms_page_template" => cms_page_template_params}, socket) do
-    changeset = Cms.change_cms_page_template(socket.assigns.cms_page_template, cms_page_template_params)
+  def handle_info({ContentAreasEditor, {:flash, kind, message}}, socket), do: {:noreply, put_flash(socket, kind, message)}
+
+  @impl true
+  def handle_event("validate", %{"cms_page_template" => params}, socket) do
+    changeset = Cms.change_cms_page_template(socket.assigns.cms_page_template, params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
-  def handle_event("save", %{"cms_page_template" => cms_page_template_params}, socket) do
-    save_cms_page_template(socket, socket.assigns.live_action, cms_page_template_params)
+  def handle_event("save", %{"cms_page_template" => params}, socket) do
+    save_cms_page_template(socket, socket.assigns.live_action, params)
   end
 
-  def handle_event("validate_area", %{"_id" => id, "cms_content_area" => params}, socket) do
-    content_area = Enum.find(socket.assigns.areas, fn area -> area.id == id end)
-    changeset = Cms.change_cms_content_area(content_area, params)
-    updated_area_forms = Map.put(socket.assigns.area_forms, content_area.id, to_form(changeset, action: :validate))
-
-    {:noreply, assign(socket, area_forms: updated_area_forms)}
+  def handle_event("delete", _params, socket) do
+    {:ok, _} = Cms.delete_cms_page_template(socket.assigns.cms_page_template)
+    {:noreply, socket |> put_flash(:info, "Template \"#{socket.assigns.cms_page_template.name}\" deleted") |> push_navigate(to: DeadSimpleCms.path("/cms_page_templates"))}
   end
 
-  def handle_event("add_area", _params, socket) do
-    attrs = %{cms_page_template_id: socket.assigns.cms_page_template.id, position: Enum.count(socket.assigns.areas) + 1, name: "New Content Area", visible: true, cms_slot_id: List.first(socket.assigns.cms_slots).id}
-
-    case Cms.create_cms_content_area(attrs) do
-      {:ok, _content_area} ->
-        cms_page_template = Cms.get_cms_page_template!(socket.assigns.cms_page_template.id)
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Content area added")
-         |> assign(:cms_page_template, cms_page_template)
-         |> assign(:areas, cms_page_template.cms_content_areas)
-         |> assign(:area_forms, build_area_forms(cms_page_template.cms_content_areas))}
-
-      {:error, %Ecto.Changeset{} = _changeset} ->
-        {:noreply, put_flash(socket, :error, "Content area could not be added")}
-    end
-  end
-
-  def handle_event("save_area", %{"_id" => id, "cms_content_area" => params}, socket) do
-    content_area = Enum.find(socket.assigns.areas, fn area -> area.id == id end)
-
-    case Cms.update_cms_content_area(content_area, params) do
-      {:ok, updated_content_area} ->
-        updated_areas = Enum.map(socket.assigns.areas, fn area -> if area.id == updated_content_area.id, do: updated_content_area, else: area end)
-        updated_area_forms = Map.put(socket.assigns.area_forms, updated_content_area.id, to_form(Cms.change_cms_content_area(updated_content_area)))
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Content area saved")
-         |> assign(:areas, updated_areas)
-         |> assign(:area_forms, updated_area_forms)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        updated_area_forms = Map.put(socket.assigns.area_forms, content_area.id, to_form(changeset))
-
-        {:noreply, assign(socket, area_forms: updated_area_forms)}
-    end
-  end
-
-  defp build_area_forms(cms_content_area) do
-    Enum.reduce(cms_content_area, %{}, fn cms_content_area, forms_by_id ->
-      Map.put(forms_by_id, cms_content_area.id, to_form(Cms.change_cms_content_area(cms_content_area)))
-    end)
-  end
-
-  defp save_cms_page_template(socket, :edit, cms_page_template_params) do
-    case Cms.update_cms_page_template(socket.assigns.cms_page_template, cms_page_template_params) do
+  defp save_cms_page_template(socket, :edit, params) do
+    case Cms.update_cms_page_template(socket.assigns.cms_page_template, params) do
       {:ok, cms_page_template} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Cms page template updated successfully")
-         |> push_navigate(to: return_path(socket.assigns.return_to, cms_page_template))}
+        {:noreply, socket |> put_flash(:info, "Template settings saved") |> assign(cms_page_template: cms_page_template, form: to_form(Cms.change_cms_page_template(cms_page_template)))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
-  defp save_cms_page_template(socket, :new, cms_page_template_params) do
-    case Cms.create_cms_page_template(cms_page_template_params) do
+  defp save_cms_page_template(socket, :new, params) do
+    case Cms.create_cms_page_template(params) do
       {:ok, cms_page_template} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Cms page template created successfully")
-         |> push_navigate(to: DeadSimpleCms.path("/cms_page_templates/#{cms_page_template.id}/edit"))}
+        {:noreply, socket |> put_flash(:info, "Template created. Add its sections below.") |> push_navigate(to: DeadSimpleCms.path("/cms_page_templates/#{cms_page_template.id}/edit"))}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
 
-  defp return_path("index", _cms_page_template), do: DeadSimpleCms.path("/cms_page_templates")
-  defp return_path("show", cms_page_template), do: DeadSimpleCms.path("/cms_page_templates/#{cms_page_template.id}")
+  defp pages_using(template), do: Enum.filter(Cms.list_cms_pages(), &(&1.cms_page_template_id == template.id))
+
+  defp pages_sentence([]), do: "no pages yet"
+  defp pages_sentence([page]), do: "1 page (#{page.title})"
+  defp pages_sentence(pages), do: "#{length(pages)} pages (#{Enum.map_join(pages, ", ", & &1.title)})"
+
+  defp delete_confirm(template, []), do: "Delete the template \"#{template.name}\"? This can't be undone."
+
+  defp delete_confirm(template, pages),
+    do: "Delete the template \"#{template.name}\"? The #{length(pages)} pages using it keep their own sections but lose its shared sections. This can't be undone."
 end

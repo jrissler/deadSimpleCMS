@@ -114,6 +114,51 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
     """
   end
 
+  @doc """
+  A small status pill: Live/Draft, Shown/Hidden, Placeholder and so on.
+
+  `tone` is `:good` (green), `:muted` (gray), `:dark` or `:warning` (amber).
+
+      <.status_badge tone={if page.published, do: :good, else: :muted}>{if page.published, do: "Live", else: "Draft"}</.status_badge>
+  """
+  attr :tone, :atom, default: :muted, values: [:good, :muted, :dark, :warning]
+  attr :rest, :global
+  slot :inner_block, required: true
+
+  def status_badge(assigns) do
+    ~H"""
+    <span
+      class={[
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium",
+        @tone == :good && "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20",
+        @tone == :muted && "bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-500/20",
+        @tone == :dark && "bg-zinc-800 text-white",
+        @tone == :warning && "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/20"
+      ]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  @doc "Help text under a form field."
+  attr :id, :string, default: nil
+  attr :class, :any, default: nil
+  slot :inner_block, required: true
+
+  def hint(assigns) do
+    ~H"""
+    <p id={@id} class={["mt-1 text-xs leading-5 text-zinc-500", @class]}>{render_slot(@inner_block)}</p>
+    """
+  end
+
+  @doc "A friendly date, like \"Oct 23, 2026\"."
+  def friendly_date(nil), do: nil
+  def friendly_date(%DateTime{} = datetime), do: Calendar.strftime(datetime, "%b %-d, %Y")
+  def friendly_date(%NaiveDateTime{} = datetime), do: Calendar.strftime(datetime, "%b %-d, %Y")
+  def friendly_date(%Date{} = date), do: Calendar.strftime(date, "%b %-d, %Y")
+
   defp button_class(variant, extra_class) do
     base = "inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none"
 
@@ -601,6 +646,9 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
 
   slot :action, doc: "the slot for showing user actions in the last table column"
 
+  attr :empty_title, :string, default: "Nothing here yet", doc: "shown when there are no rows"
+  attr :empty_description, :string, default: "Records you add will show up here."
+
   def admin_table(assigns), do: render_admin_component(:admin_table, assigns, &default_admin_table/1)
 
   @doc "Built-in markup for `admin_table/1`. See \"Overriding admin components\"."
@@ -611,61 +659,41 @@ defmodule DeadSimpleCmsWeb.CoreComponents do
       end
 
     ~H"""
-    <div class="px-4 sm:px-0 border-b-1">
-      <div class="sm:hidden mb-2">
-        <label for="question-tabs" class="sr-only">Select a tab</label>
-        <select id="question-tabs" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-rose-500">
-          <option selected="">Tab 1</option>
-          <option>Tab 2</option>
-          <option>Tab 3</option>
-        </select>
-      </div>
-      <div class="hidden sm:block">
-        <nav class="isolate flex divide-x divide-gray-200 shadow" aria-label="Tabs">
-          <.link :for={tab <- @tab} patch={tab[:patch]} class={["group relative min-w-0 flex-1 overflow-hidden bg-white py-4 px-6 text-center text-sm font-medium hover:bg-gray-50 focus:z-10", tab[:class]]}>
-            <span>{tab[:label]}</span>
-            <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-0.5"></span>
-          </.link>
-        </nav>
-      </div>
-    </div>
-    <div class="bg-white">
-      <div class="mx-auto max-w-7xl">
-        <div class="px-2 sm:px-6 lg:px-4">
-          <div class="-mx-4 sm:-mx-0 pt-4">
-            <table class="min-w-full divide-y divide-gray-300">
-              <thead>
-                <tr>
-                  <th :for={col <- @col} class={["py-4 pl-2 pr-3 text-left text-sm font-semibold text-gray-900", col[:extra_th_class]]}>{col[:label]}</th>
-                  <th :if={@action != []} class="relative p-0 pb-4">
-                    <span class="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
+    <nav :if={@tab != []} class="isolate flex flex-wrap divide-x divide-gray-200 overflow-hidden rounded-lg shadow" aria-label="Tabs">
+      <.link :for={tab <- @tab} patch={tab[:patch]} class={["group relative min-w-0 flex-1 bg-white px-6 py-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10", tab[:class]]}>
+        {tab[:label]}
+      </.link>
+    </nav>
+    <div class="overflow-x-auto bg-white">
+      <table class="min-w-full divide-y divide-gray-300">
+        <thead>
+          <tr>
+            <th :for={col <- @col} class={["px-3 py-4 text-left text-sm font-semibold text-gray-900", col[:extra_th_class]]}>{col[:label]}</th>
+            <th :if={@action != []} class="relative p-0 pb-4">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
 
-              <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"} class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
-                <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
-                  <td :for={{col, i} <- Enum.with_index(@col)} phx-click={@row_click && @row_click.(row)} class={["relative whitespace-nowrap px-3 py-1 text-sm text-gray-500", col[:extra_td_class], @row_click && "hover:cursor-pointer"]}>
-                    <div class="block py-4 pr-6">
-                      <span class="absolute -inset-y-px right-0 -left-4 sm:rounded-l-xl" />
-                      <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                        {render_slot(col, @row_item.(row))}
-                      </span>
-                    </div>
-                  </td>
-                  <td :if={@action != []} class="relative w-14 p-0">
-                    <div class="relative whitespace-nowrap py-1 text-right text-sm font-medium pr-4">
-                      <span :for={action <- @action} class="relative font-medium leading-6 text-indigo-600 hover:text-indigo-900">
-                        {render_slot(action, @row_item.(row))}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+        <tbody id={@id} phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"} class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
+          <tr id={"#{@id}-empty"} class="hidden only:table-row">
+            <td colspan={length(@col) + if(@action != [], do: 1, else: 0)} class="px-3 py-12 text-center">
+              <p class="font-semibold text-zinc-900">{@empty_title}</p>
+              <p class="mt-1 text-sm text-zinc-500">{@empty_description}</p>
+            </td>
+          </tr>
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
+            <td :for={{col, i} <- Enum.with_index(@col)} phx-click={@row_click && @row_click.(row)} class={["px-3 py-4 align-top text-sm text-gray-500", col[:extra_td_class], @row_click && "hover:cursor-pointer"]}>
+              <span class={i == 0 && "font-semibold text-zinc-900"}>{render_slot(col, @row_item.(row))}</span>
+            </td>
+            <td :if={@action != []} class="whitespace-nowrap px-3 py-4 text-right text-sm font-medium">
+              <span :for={action <- @action} class="ml-3 font-medium text-indigo-600 hover:text-indigo-900">
+                {render_slot(action, @row_item.(row))}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     """
   end

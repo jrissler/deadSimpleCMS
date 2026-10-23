@@ -1,33 +1,51 @@
 defmodule DeadSimpleCmsWeb.CmsImageLive.Index do
+  @moduledoc "The image library: a thumbnail of every image, what needs attention, and where each one is used."
   use DeadSimpleCmsWeb, :live_view
 
+  import Ecto.Query, warn: false
+  import DeadSimpleCmsWeb.CmsImageLive.Show, only: [usage_items: 1, usage_summary: 1, delete_confirmation: 2, placeholder?: 1, present?: 1, delete_image: 1]
+
   alias DeadSimpleCms.Cms
+  alias DeadSimpleCms.Cms.{CmsContentArea, CmsPage}
+  alias DeadSimpleCms.SpecialContent.CmsBio
 
   @impl true
   def render(assigns) do
     ~H"""
-    <.content_header main_title="Listing CMS Images" sub_title="Admin" description="Images are reusable media assets that can be attached to content areas.">
+    <.content_header main_title="Images" sub_title="Website content" description="Photos you can reuse in sections, bios and page share images. Click an image to see it large and where it's used.">
       <:action>
-        <.link navigate={DeadSimpleCms.path("/cms_images/new")} class="flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-          <.icon name="hero-plus" class="-ml-0.5 mr-1 h-5 w-5" /> Add CMS Image
-        </.link>
+        <.button variant="primary" navigate={DeadSimpleCms.path("/cms_images/new")}>
+          <.icon name="hero-plus" class="size-4" /> Add image
+        </.button>
       </:action>
     </.content_header>
 
-    <.admin_table id="cms_images" rows={@streams.cms_images} row_click={fn {_id, image} -> JS.navigate(DeadSimpleCms.path("/cms_images/#{image.id}")) end}>
-      <:col :let={{_id, image}} label="Filename">{image.filename}</:col>
-      <:col :let={{_id, image}} label="Caption">
-        <span class="truncate max-w-xs block">{image.caption}</span>
+    <.admin_table
+      id="cms_images"
+      rows={@streams.cms_images}
+      row_click={fn {_id, image} -> JS.navigate(DeadSimpleCms.path("/cms_images/#{image.id}")) end}
+      empty_title="No images yet"
+      empty_description="Add your first image to use it in sections, bios and share images."
+    >
+      <:col :let={{_id, image}} label="Image">
+        <img src={image.url} alt="" loading="lazy" class="h-14 w-20 rounded-md object-cover ring-1 ring-zinc-200" />
+      </:col>
+      <:col :let={{_id, image}} label="File and description">
+        <span class="block max-w-sm truncate">{image.filename}</span>
+        <span :if={present?(image.alt)} class="block max-w-sm truncate text-xs font-normal text-zinc-500">{image.alt}</span>
+        <span class="mt-1 flex flex-wrap gap-1">
+          <.status_badge :if={!present?(image.alt)} tone={:warning}>Needs a description</.status_badge>
+          <.status_badge :if={placeholder?(image)} tone={:warning}>Placeholder</.status_badge>
+        </span>
+      </:col>
+      <:col :let={{_id, image}} label="Used">
+        <span class={if usage_for(@usage, image) == [], do: "font-normal text-zinc-500", else: "font-normal"}>
+          {usage_summary(usage_for(@usage, image)) |> String.trim_trailing(".")}
+        </span>
       </:col>
 
       <:action :let={{_id, image}}>
-        <.link navigate={DeadSimpleCms.path("/cms_images/#{image.id}/edit")}>
-          Edit
-        </.link>
-      </:action>
-
-      <:action :let={{_id, image}}>
-        <.link phx-click={JS.push("delete", value: %{id: image.id})} data-confirm="Are you sure?">
+        <.link phx-click={JS.push("delete", value: %{id: image.id})} data-confirm={delete_confirmation(image, usage_for(@usage, image))}>
           Delete
         </.link>
       </:action>
@@ -37,16 +55,43 @@ defmodule DeadSimpleCmsWeb.CmsImageLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    images = Enum.sort_by(Cms.list_cms_images(), & &1.inserted_at, {:desc, DateTime})
+
     {:ok,
      socket
-     |> assign(:page_title, "Listing CMS images")
-     |> stream(:cms_images, Cms.list_cms_images())}
+     |> assign(:page_title, "Images")
+     |> assign(:usage, usage_by_image())
+     |> stream(:cms_images, images)}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     image = Cms.get_cms_image!(id)
-    {:ok, _} = Cms.delete_cms_image(image)
-    {:noreply, stream_delete(socket, :cms_images, image)}
+
+    case delete_image(image) do
+      {:ok, message} -> {:noreply, socket |> put_flash(:info, message) |> stream_delete(:cms_images, image)}
+      {:error, message} -> {:noreply, put_flash(socket, :error, message)}
+    end
+  end
+
+  defp usage_for(usage, image), do: Map.get(usage, image.id, [])
+
+  # Where every image is used, as `%{image_id => usage_items}`, in three queries.
+  defp usage_by_image do
+    repo = DeadSimpleCms.repo!()
+    areas = repo.all(from(a in CmsContentArea, where: not is_nil(a.cms_image_id), order_by: a.name, preload: [:cms_page, :cms_page_template]))
+    bios = repo.all(from(b in CmsBio, where: not is_nil(b.cms_image_id), order_by: b.name))
+    pages = repo.all(from(p in CmsPage, where: not is_nil(p.og_image_id), order_by: p.title))
+
+    ids = Enum.uniq(Enum.map(areas, & &1.cms_image_id) ++ Enum.map(bios, & &1.cms_image_id) ++ Enum.map(pages, & &1.og_image_id))
+
+    Map.new(ids, fn id ->
+      {id,
+       usage_items(%{
+         areas: Enum.filter(areas, &(&1.cms_image_id == id)),
+         bios: Enum.filter(bios, &(&1.cms_image_id == id)),
+         pages: Enum.filter(pages, &(&1.og_image_id == id))
+       })}
+    end)
   end
 end
