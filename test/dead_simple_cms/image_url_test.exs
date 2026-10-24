@@ -12,12 +12,14 @@ defmodule DeadSimpleCms.ImageUrlTest do
   setup do
     original_s3 = Application.get_env(:dead_simple_cms, :s3)
     original_image_urls = Application.get_env(:dead_simple_cms, :image_urls)
+    original_public_read_acl = Application.get_env(:dead_simple_cms, :public_read_acl)
 
     Application.put_env(:dead_simple_cms, :s3, region: "us-east-1", access_key_id: "test-access-key", secret_access_key: "test-secret-key", bucket: "test-bucket")
 
     on_exit(fn ->
       restore(:s3, original_s3)
       restore(:image_urls, original_image_urls)
+      restore(:public_read_acl, original_public_read_acl)
     end)
 
     %{image: %CmsImage{url: @url, alt: "Hero"}}
@@ -63,5 +65,13 @@ defmodule DeadSimpleCms.ImageUrlTest do
   test "public uploads are made public-read" do
     assert {:ok, meta, :socket} = ImageUploads.presign_upload(%{client_name: "hero.jpg", client_type: "image/jpeg"}, :socket)
     assert meta.headers["x-amz-acl"] == "public-read"
+  end
+
+  test "with public_read_acl: false, public uploads send no ACL and image_url/1 is still the stored url", %{image: image} do
+    Application.put_env(:dead_simple_cms, :public_read_acl, false)
+
+    assert {:ok, meta, :socket} = ImageUploads.presign_upload(%{client_name: "hero.jpg", client_type: "image/jpeg"}, :socket)
+    assert meta.headers == %{"content-type" => "image/jpeg"}
+    assert Cms.image_url(image) == @url
   end
 end

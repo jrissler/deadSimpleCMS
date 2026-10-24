@@ -218,6 +218,10 @@ config :dead_simple_cms,
   - `:public`: uploads are sent as `public-read`, and `Cms.image_url/1` returns
     the stored S3 URL. The bucket (or the `uploads/cms_images/` prefix) must
     be publicly readable.
+- `public_read_acl`: `true` (the default) or `false`. Only used with
+  `image_urls: :public`. Set it to `false` when a bucket policy makes
+  `uploads/cms_images/*` publicly readable and the bucket blocks or disables
+  ACLs (the AWS default), so uploads are sent without the `public-read` ACL.
   - `:signed`: for private buckets. Uploads aren't made public, and
     `Cms.image_url/1` returns a presigned GET URL that lasts an hour. Each
     render signs a fresh URL. Avoid caching rendered pages for longer than

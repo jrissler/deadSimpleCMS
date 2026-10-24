@@ -63,11 +63,16 @@ defmodule DeadSimpleCmsWeb.ImageUploads do
     end
   end
 
-  # Signed image URLs are for private buckets, so the object isn't made public-read.
+  # Public images are made public-read, unless `public_read_acl: false` says a bucket policy
+  # makes them public instead (buckets with ACLs blocked reject the header). Signed image URLs
+  # are for private buckets, so those objects are never made public-read.
   defp upload_headers(content_type) do
-    case Application.get_env(:dead_simple_cms, :image_urls, :public) do
-      :signed -> %{"content-type" => content_type}
-      _public -> %{"content-type" => content_type, "x-amz-acl" => "public-read", "acl" => "public-read"}
+    public? = Application.get_env(:dead_simple_cms, :image_urls, :public) == :public
+
+    if public? and Application.get_env(:dead_simple_cms, :public_read_acl, true) do
+      %{"content-type" => content_type, "x-amz-acl" => "public-read", "acl" => "public-read"}
+    else
+      %{"content-type" => content_type}
     end
   end
 
